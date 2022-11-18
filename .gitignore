@@ -8,6 +8,8 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+.resources
+.resources/
 .idea
 .datasets
 .Python
@@ -140,3 +142,4 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+/resources/NIPS17/
