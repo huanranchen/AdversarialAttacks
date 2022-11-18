@@ -1,11 +1,11 @@
-import kornia
+from kornia import augmentation as KA
 import torch
 from .utils import *
 from torch import nn
 from typing import Callable
 
 
-class DI_FGSM():
+class DI_MI_FGSM():
     def __init__(self, model: nn.Module, epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = False,
                  step_size: float = 5e-3,
@@ -21,6 +21,10 @@ class DI_FGSM():
         self.criterion = criterion
         self.targerted_attack = targeted_attack
         self.mu = mu
+        self.aug_policy = KA.AugmentationSequential(
+            KA.RandomCrop((28, 28), padding=4),
+
+        )
 
     def init(self):
         # set the model parameters requires_grad is False
@@ -32,7 +36,9 @@ class DI_FGSM():
         return x
 
     def attack(self, x, y, ):
+        original_x = x.clone()
         momentum = torch.zeros_like(x)
+        p = torch.zeros_like(x)
         if self.random_start:
             x = self.perturb(x)
 
@@ -45,11 +51,12 @@ class DI_FGSM():
             # update
             if self.targerted_attack:
                 momentum = self.mu * momentum - grad / torch.norm(grad, p=1)
-                x += self.step_size * momentum.sign()
+                p += self.step_size * momentum.sign()
             else:
                 momentum = self.mu * momentum + grad / torch.norm(grad, p=1)
-                x += self.step_size * momentum.sign()
-            x = clamp(x)
+                p += self.step_size * momentum.sign()
+            p = clamp(p)
+            x = clamp(original_x + p)
 
         return x
 
