@@ -7,3 +7,4 @@ if a model need normalization, please adding the normalization part in the model
 from .BIM import *
 from .FGSM import *
 from .PGD import *
+from .base import *

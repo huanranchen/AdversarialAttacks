@@ -6,9 +6,10 @@ import torch
 from torch import nn
 from typing import Callable
 from .utils import *
+from .base import BaseAttacker
 
 
-class PGD():
+class PGD(BaseAttacker):
     def __init__(self, model: nn.Module, epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = True,
                  step_size: float = 5e-3,
@@ -22,6 +23,7 @@ class PGD():
         self.step_size = step_size
         self.criterion = criterion
         self.targerted_attack = targeted_attack
+        super(PGD, self).__init__()
 
     def init(self):
         # set the model parameters requires_grad is False
@@ -51,5 +53,4 @@ class PGD():
 
         return x
 
-    def __call__(self, *args, **kwargs):
-        return self.attack(*args, **kwargs)
+

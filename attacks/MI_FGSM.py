@@ -2,9 +2,10 @@ import torch
 from .utils import *
 from torch import nn
 from typing import Callable
+from .base import BaseAttacker
 
 
-class MI_FGSM():
+class MI_FGSM(BaseAttacker):
     def __init__(self, model: nn.Module, epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = False,
                  step_size: float = 5e-3,
@@ -20,6 +21,8 @@ class MI_FGSM():
         self.criterion = criterion
         self.targerted_attack = targeted_attack
         self.mu = mu
+        
+        super(MI_FGSM, self).__init__()
 
     def init(self):
         # set the model parameters requires_grad is False
