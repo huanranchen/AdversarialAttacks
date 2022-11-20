@@ -54,6 +54,3 @@ class MI_FGSM(BaseAttacker):
             x = clamp(x)
 
         return x
-
-    def __call__(self, *args, **kwargs):
-        return self.attack(*args, **kwargs)
