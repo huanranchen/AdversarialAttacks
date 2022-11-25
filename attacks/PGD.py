@@ -13,8 +13,10 @@ class PGD(BaseAttacker):
     def __init__(self, model: nn.Module, epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = True,
                  step_size: float = 5e-3,
-                 criterion: Callable = nn.CrossEntropyLoss(),
+                 criterion: Callable = nn.CrossEntropyLoss().to(
+                     torch.device('cuda' if torch.cuda.is_available() else 'cpu')),
                  targeted_attack=False,
+                 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
                  ):
         self.model = model
         self.random_start = random_start
@@ -23,6 +25,7 @@ class PGD(BaseAttacker):
         self.step_size = step_size
         self.criterion = criterion
         self.targerted_attack = targeted_attack
+        self.device = device
         super(PGD, self).__init__()
 
     def init(self):
@@ -35,6 +38,7 @@ class PGD(BaseAttacker):
         return x
 
     def attack(self, x, y, ):
+        original_x = x.clone()
         if self.random_start:
             x = self.perturb(x)
 
@@ -50,7 +54,6 @@ class PGD(BaseAttacker):
             else:
                 x += self.step_size * grad.sign()
             x = clamp(x)
+            x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)
 
         return x
-
-

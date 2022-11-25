@@ -15,7 +15,7 @@ class NIPS17(Dataset):
             reader = csv.reader(f)
             for line in list(reader)[1:]:
                 name, label = line[0], int(line[6])
-                self.labels[name + '.jpg'] = label
+                self.labels[name + '.png'] = label
         self.images = os.listdir(images_path)
         self.images_path = images_path
         self.transforms = transforms.Compose([
