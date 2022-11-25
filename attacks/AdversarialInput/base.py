@@ -12,3 +12,9 @@ class BaseAttacker():
 
     def __call__(self, *args, **kwargs):
         return self.attack(*args, **kwargs)
+
+    def begin_attack(self, *args, **kwargs):
+        pass
+
+    def end_attack(self, *args, **kwargs):
+        pass

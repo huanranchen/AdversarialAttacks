@@ -5,7 +5,7 @@ PGD: Projected Gradient Descent
 import torch
 from torch import nn
 from typing import Callable
-from .utils import *
+from attacks.utils import *
 from .base import BaseAttacker
 
 

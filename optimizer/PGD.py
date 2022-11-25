@@ -2,7 +2,7 @@ import torch
 from torch.optim import Optimizer
 
 
-class FGSM(Optimizer):
+class PGD(Optimizer):
     def __init__(self, params, lr, ):
         dampening = 0
         weight_decay = 0
@@ -11,7 +11,7 @@ class FGSM(Optimizer):
         momentum = 0
         defaults = dict(lr=lr, momentum=momentum, dampening=dampening,
                         weight_decay=weight_decay, nesterov=nesterov, maximize=maximize)
-        super(FGSM, self).__init__(params, defaults)
+        super(PGD, self).__init__(params, defaults)
         self.lr = lr
 
     @torch.no_grad()

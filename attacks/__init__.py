@@ -4,7 +4,7 @@ if a model need normalization, please adding the normalization part in the model
 
 '''
 
-from .BIM import *
-from .FGSM import *
-from .PGD import *
-from .base import *
+from attacks.AdversarialInput.BIM import *
+from attacks.AdversarialInput.FGSM import *
+from attacks.AdversarialInput.PGD import *
+from attacks.AdversarialInput.base import *

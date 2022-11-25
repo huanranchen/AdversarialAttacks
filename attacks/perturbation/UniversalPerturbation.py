@@ -1,8 +1,7 @@
-from .base import BaseAttacker
-from typing import Callable, List
-from optimizer import Optimizer
+from attacks.AdversarialInput.base import BaseAttacker
+from typing import Callable, List, Iterable
 from torch import nn
-from .utils import *
+from attacks.utils import *
 
 
 class Perturbation():
@@ -34,9 +33,9 @@ class UniversalPerturbation(BaseAttacker):
     '''
 
     def __init__(self,
+                 attacker: BaseAttacker,
                  models: List[nn.Module],
                  perturbation: Perturbation,
-                 optimizer: Callable,
                  transformation: nn.Module = nn.Identity(),
                  criterion: Callable = nn.CrossEntropyLoss(),
                  ):
@@ -44,16 +43,20 @@ class UniversalPerturbation(BaseAttacker):
         self.models = models
         perturbation.requires_grad(True)
         self.perturbation = perturbation
-        self.optimizer = optimizer(perturbation.perturbation)
         self.transform = transformation
         self.criterion = criterion
+        self.attacker = attacker
         super(UniversalPerturbation, self).__init__()
 
     def init(self):
         for model in self.models:
             model.requires_grad_(False)
 
-    def attack(self, loader: DataLoader,
+    def tensor_to_loader(self, x, y):
+        return [(x, y)]
+
+    def attack(self,
+               loader: DataLoader or Iterable,
                total_iter_step: int = 1000,
                is_clamp=True):
         iter_step = 0
@@ -63,11 +66,8 @@ class UniversalPerturbation(BaseAttacker):
                 if is_clamp:
                     x = clamp(x)
                 x = self.transform(x)
-                loss: torch.tensor = 0
                 for model in self.models:
-                    loss += self.criterion(model(x), y)
-                loss.backward()
-                self.optimizer.step()
+                    self.attacker.attack(model, x, y)
 
                 iter_step += 1
                 if iter_step > total_iter_step:
