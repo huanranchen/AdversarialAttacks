@@ -6,7 +6,7 @@ from models import *
 import torch
 from tqdm import tqdm
 from torch.nn import functional as F
-from tester import test_multimodel_acc_one_image
+from tester import test_multimodel_acc_one_image, test_acc
 
 loader = get_NIPS17_loader(batch_size=16)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -21,15 +21,18 @@ for model in origin_train_models:
     train_models.append(model)
 
 for model in origin_test_models:
-    model = BaseNormModel(model(pretrained=True)).to(device)
+    model = BaseNormModel(model(pretrained=True), transform=torch.nn.Identity()).to(device)
     model.eval()
     test_models.append(model)
 
-x, y = next(iter(loader))
-x, y = x.to(device), y.to(device)
-perturb = Perturbation(PGD)
-perturb.constant_init(0)
-attacker = SequentialAttacker(train_models, perturb)
-p = attacker.attack(attacker.tensor_to_loader(x, y), total_iter_step=20)
-adv_x = x + p.perturbation
-test_multimodel_acc_one_image(x, y, test_models)
+test_acc(test_models[0], loader)
+
+# x, y = next(iter(loader))
+# x, y = x.to(device), y.to(device)
+# perturb = Perturbation(PGD)
+# perturb.constant_init(0)
+# attacker = SequentialAttacker(train_models, perturb)
+# p = attacker.attack(attacker.tensor_to_loader(x, y), total_iter_step=1)
+# # adv_x = x + p.perturbation
+# adv_x = x
+# test_multimodel_acc_one_image(x, y, test_models)
