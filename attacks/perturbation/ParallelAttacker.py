@@ -45,7 +45,7 @@ class ParallelAttacker():
 
                 loss = 0
                 for model in self.models:
-                    loss += self.criterion(model(x), y)
+                    loss += self.criterion(model(x.to(model.device)), y.to(model.device))
                 self.perturbation.zero_grad()
                 loss.backward()
                 self.perturbation.step()

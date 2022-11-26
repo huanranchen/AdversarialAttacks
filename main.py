@@ -1,39 +1,35 @@
 import os
 from data import get_NIPS17_loader
-from attacks import FGSM, PGD
-from utils import scale_and_show_tensor
-from models import BaseNormModel, resnet50
+from attacks import CosineSimilarityEncourager, SequentialAttacker, ParallelAttacker, Perturbation
+from optimizer import PGD
+from models import *
 import torch
 from tqdm import tqdm
-from utils import total_variation
 from torch.nn import functional as F
+from tester import test_multimodel_acc_one_image
 
-
-def criterion(x, y, perturbation, alpha=1, beta=100):
-    cross_entropy = F.cross_entropy(x, y)
-    tv = total_variation(perturbation)
-    return alpha * cross_entropy + beta * tv
-
-
-loader = get_NIPS17_loader()
+loader = get_NIPS17_loader(batch_size=16)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = resnet50(pretrained=True)
-model = BaseNormModel(model).to(device)
-model.eval()
-attacker = PGD(model, total_step=100, criterion=criterion)
 
-count = 0
+origin_train_models = [resnet50, resnet152, resnet18, resnet101, resnet34]
+origin_test_models = [wide_resnet50_2, wide_resnet101_2]
 
-path = './visualize_perturbation/PGD100tv100/'
+train_models, test_models = [], []
+for model in origin_train_models:
+    model = BaseNormModel(model(pretrained=True)).to(device)
+    model.eval()
+    train_models.append(model)
 
-if not os.path.exists(path):
-    os.makedirs(path)
-for x, y in tqdm(loader):
-    x, y = x.to(device), y.to(device)
-    attacked = attacker(x, y).detach()
-    perturbation = attacked - x
-    perturbation = torch.split(perturbation, 1, dim=0)
-    for p in perturbation:
-        p = scale_and_show_tensor(p)
-        p.save(os.path.join(path, f'{count}.png'))
-        count += 1
+for model in origin_test_models:
+    model = BaseNormModel(model(pretrained=True)).to(device)
+    model.eval()
+    test_models.append(model)
+
+x, y = next(iter(loader))
+x, y = x.to(device), y.to(device)
+perturb = Perturbation(PGD)
+perturb.constant_init(0)
+attacker = SequentialAttacker(train_models, perturb)
+p = attacker.attack(attacker.tensor_to_loader(x, y), total_iter_step=20)
+adv_x = x + p.perturbation
+test_multimodel_acc_one_image(x, y, test_models)

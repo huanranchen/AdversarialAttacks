@@ -1,13 +1,12 @@
 from torch.optim import Optimizer
 from typing import Callable, List, Iterable
-from torch import nn
 from attacks.utils import *
 
 
 class Perturbation():
     def __init__(self,
                  optimizer: Optimizer or Callable,
-                 perturbation_size: tuple = (3, 224, 224),
+                 perturbation_size: tuple = (3, 299, 299),
                  device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
         self.perturbation = torch.zeros(perturbation_size, device=device)
         self.device = device
@@ -17,13 +16,15 @@ class Perturbation():
         self.perturbation = torch.randn_like(self.perturbation, device=self.device) * scale + mean
         if is_clamp:
             self.perturbation = clamp(self.perturbation)
-        self.optimizer = self.optimizer(self.perturbation)
+        self.optimizer = self.optimizer([self.perturbation])
 
     def uniform_init(self):
         self.perturbation = torch.rand_like(self.perturbation, device=self.device)
+        self.optimizer = self.optimizer([self.perturbation])
 
     def constant_init(self, constant=0):
         self.perturbation = torch.zeros_like(self.perturbation, device=self.device) + constant
+        self.optimizer = self.optimizer([self.perturbation])
 
     def requires_grad(self, requires_grad: bool = True):
         self.perturbation.requires_grad = requires_grad

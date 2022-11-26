@@ -17,6 +17,7 @@ class NIPS17(Dataset):
                 name, label = line[0], int(line[6])
                 self.labels[name + '.png'] = label
         self.images = os.listdir(images_path)
+        self.images.sort()
         self.images_path = images_path
         self.transforms = transforms.Compose([
             transforms.ToTensor(),

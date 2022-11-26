@@ -1,10 +1,12 @@
 from typing import Callable, List, Iterable
+import torch
 from torch import nn
 from attacks.utils import *
 from .PerturbationObject import Perturbation
+from torch.nn import functional as F
 
 
-class ParallelAttacker():
+class SequentialAttacker():
     '''
     please set your learning rate in optimizer
     set data augmentation in your loader.
@@ -14,7 +16,7 @@ class ParallelAttacker():
                  models: List[nn.Module],
                  perturbation: Perturbation,
                  transformation: nn.Module = nn.Identity(),
-                 criterion: Callable = nn.CrossEntropyLoss(),
+                 criterion: Callable = F.cross_entropy,
                  **kwargs,
                  ):
         self.perturbation = torch.randn
@@ -23,10 +25,13 @@ class ParallelAttacker():
         self.perturbation = perturbation
         self.transform = transformation
         self.criterion = criterion
+        self.init()
 
     def init(self):
-        for model in self.models:
+        for i, model in enumerate(self.models):
             model.requires_grad_(False)
+            model.to(torch.device(f'cuda:{i}'))
+            model.device = torch.device(f'cuda:{i}')
 
     def tensor_to_loader(self, x, y):
         return [(x, y)]
@@ -38,14 +43,13 @@ class ParallelAttacker():
         iter_step = 0
         while True:
             for x, y in loader:
-                x = x + self.perturbation.perturbation
-                if is_clamp:
-                    x = clamp(x)
-                x = self.transform(x)
-
-                loss = 0
+                original_x = x.clone()
                 for model in self.models:
-                    loss += self.criterion(model(x), y)
+                    x = original_x + self.perturbation.perturbation
+                    if is_clamp:
+                        x = clamp(x)
+                    x = self.transform(x)
+                    loss = self.criterion(model(x.to(model.device)), y.to(model.device))
                     self.perturbation.zero_grad()
                     loss.backward()
                     self.perturbation.step()

@@ -1,6 +1,5 @@
 from .ParallelAttacker import ParallelAttacker
 from typing import Callable, List, Iterable
-from torch import nn
 from attacks.utils import *
 from .utils import cosine_similarity
 
@@ -9,7 +8,7 @@ class CosineSimilarityEncourager(ParallelAttacker):
     def __init__(self, *args, **kwargs):
         super(CosineSimilarityEncourager, self).__init__(*args, **kwargs)
         if kwargs['outer_optimizer'] is not None:
-            self.outer_optimizer = kwargs['outer_optimizer'](self.perturbation.perturbation)
+            self.outer_optimizer = kwargs['outer_optimizer']([self.perturbation.perturbation])
         else:
             self.outer_optimizer = None
 
@@ -20,14 +19,13 @@ class CosineSimilarityEncourager(ParallelAttacker):
         iter_step = 0
         while True:
             for x, y in loader:
-                x = x + self.perturbation.perturbation
-                if is_clamp:
-                    x = clamp(x)
-                x = self.transform(x)
-
-                loss = 0
+                original_x = x.clone()
                 for model in self.models:
-                    loss += self.criterion(model(x), y)
+                    x = original_x + self.perturbation.perturbation
+                    if is_clamp:
+                        x = clamp(x)
+                    x = self.transform(x)
+                    loss = self.criterion(model(x.to(model.device)), y.to(model.device))
                     self.perturbation.zero_grad()
                     loss.backward()
                     self.perturbation.step()

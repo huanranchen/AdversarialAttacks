@@ -8,3 +8,4 @@ from attacks.AdversarialInput.BIM import *
 from attacks.AdversarialInput.FGSM import *
 from attacks.AdversarialInput.PGD import *
 from attacks.AdversarialInput.AdversarialInputBase import *
+from .perturbation import *
