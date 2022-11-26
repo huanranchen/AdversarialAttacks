@@ -58,3 +58,9 @@ class SequentialAttacker():
                 if iter_step > total_iter_step:
                     self.perturbation.requires_grad(False)
                     return self.perturbation
+
+    def __call__(self, x, y, total_iter_step=20):
+        with torch.no_grad():
+            self.perturbation.perturbation.mul_(0)
+        p = self.attack(self.tensor_to_loader(x, y), total_iter_step=total_iter_step)
+        return x + p.perturbation

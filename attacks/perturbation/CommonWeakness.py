@@ -1,10 +1,10 @@
-from .ParallelAttacker import ParallelAttacker
+from .SequentialAttacker import SequentialAttacker
 from typing import Callable, List, Iterable
 from attacks.utils import *
 from .utils import cosine_similarity
 
 
-class CosineSimilarityEncourager(ParallelAttacker):
+class CosineSimilarityEncourager(SequentialAttacker):
     def __init__(self, *args, **kwargs):
         super(CosineSimilarityEncourager, self).__init__(*args, **kwargs)
         if kwargs['outer_optimizer'] is not None:
@@ -20,6 +20,7 @@ class CosineSimilarityEncourager(ParallelAttacker):
         while True:
             for x, y in loader:
                 original_x = x.clone()
+                self.begin_attack()
                 for model in self.models:
                     x = original_x + self.perturbation.perturbation
                     if is_clamp:
@@ -28,8 +29,9 @@ class CosineSimilarityEncourager(ParallelAttacker):
                     loss = self.criterion(model(x.to(model.device)), y.to(model.device))
                     self.perturbation.zero_grad()
                     loss.backward()
+                    self.grad_record.append(self.perturbation.grad())
                     self.perturbation.step()
-
+                self.end_attack()
                 iter_step += 1
                 if iter_step > total_iter_step:
                     self.perturbation.requires_grad(False)
@@ -52,12 +54,11 @@ class CosineSimilarityEncourager(ParallelAttacker):
         if self.outer_optimizer is None:
             patch.mul_(ksi)
             patch.add_((1 - ksi) * self.original)
-            self.original_patch = None
         else:
-            fake_grad = - ksi * (patch - self.original_patch)
+            fake_grad = - ksi * (patch - self.original)
             self.outer_optimizer.zero_grad()
             patch.mul_(0)
-            patch.add_(self.original_patch)
+            patch.add_(self.original)
             patch.grad = fake_grad
             self.outer_optimizer.step()
 

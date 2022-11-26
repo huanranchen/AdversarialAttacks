@@ -14,7 +14,7 @@ class NIPS17(Dataset):
         with open(label_path) as f:
             reader = csv.reader(f)
             for line in list(reader)[1:]:
-                name, label = line[0], int(line[6])
+                name, label = line[0], int(line[6]) - 1
                 self.labels[name + '.png'] = label
         self.images = os.listdir(images_path)
         self.images.sort()
