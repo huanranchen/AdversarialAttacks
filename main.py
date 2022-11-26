@@ -21,7 +21,7 @@ for model in origin_train_models:
     train_models.append(model)
 
 for model in origin_test_models:
-    model = BaseNormModel(model(pretrained=True), transform=torch.nn.Identity()).to(device)
+    model = BaseNormModel(model(pretrained=True)).to(device)
     model.eval()
     test_models.append(model)
 
