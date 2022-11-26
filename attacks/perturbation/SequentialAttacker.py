@@ -32,6 +32,7 @@ class SequentialAttacker():
             model.requires_grad_(False)
             model.to(torch.device(f'cuda:{i}'))
             model.device = torch.device(f'cuda:{i}')
+        self.perturbation.requires_grad(True)
 
     def tensor_to_loader(self, x, y):
         return [(x, y)]
@@ -62,5 +63,7 @@ class SequentialAttacker():
     def __call__(self, x, y, total_iter_step=20):
         with torch.no_grad():
             self.perturbation.perturbation.mul_(0)
+        self.perturbation.requires_grad(True)
         p = self.attack(self.tensor_to_loader(x, y), total_iter_step=total_iter_step)
+        p.requires_grad(False)
         return x + p.perturbation
