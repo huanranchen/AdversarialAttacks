@@ -14,7 +14,7 @@ class CosineSimilarityEncourager(SequentialAttacker):
 
     def attack(self,
                loader: DataLoader or Iterable,
-               total_iter_step: int = 1000,
+               total_iter_step: int = 10,
                is_clamp=True):
         iter_step = 0
         while True:
@@ -61,6 +61,7 @@ class CosineSimilarityEncourager(SequentialAttacker):
             patch.add_(self.original)
             patch.grad = fake_grad
             self.outer_optimizer.step()
+            self.perturbation.clamp()
 
         grad_similarity = cosine_similarity(self.grad_record)
         del self.grad_record

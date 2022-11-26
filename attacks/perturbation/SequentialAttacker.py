@@ -39,7 +39,7 @@ class SequentialAttacker():
 
     def attack(self,
                loader: DataLoader or Iterable,
-               total_iter_step: int = 1000,
+               total_iter_step: int = 10,
                is_clamp=True):
         iter_step = 0
         while True:

@@ -1,7 +1,7 @@
 import os
 from data import get_NIPS17_loader
 from attacks import CosineSimilarityEncourager, SequentialAttacker, ParallelAttacker, Perturbation
-from optimizer import PGD
+from optimizer import *
 from models import *
 import torch
 from tqdm import tqdm
@@ -38,5 +38,5 @@ for model in origin_test_models:
 
 perturb = Perturbation(PGD)
 perturb.constant_init(0)
-attacker = CosineSimilarityEncourager(train_models, perturb, outer_optimizer=lambda x: PGD(x, lr=0.9))
+attacker = CosineSimilarityEncourager(train_models, perturb, outer_optimizer=lambda x: Adam(x, lr=0.9, maximize=True))
 test_transfer_attack_acc(attacker, loader, test_models)

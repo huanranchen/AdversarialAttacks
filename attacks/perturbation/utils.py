@@ -15,3 +15,6 @@ def cosine_similarity(x: list):
     mask = torch.triu(torch.ones(N, N, device=x.device), diagonal=0).to(torch.bool)  # 只取上三角
     similarity = similarity[mask]
     return torch.mean(similarity).item()
+
+def clamp(x: torch.tensor, min_value: float = 0, max_value: float = 1):
+    return torch.clamp(x, min=min_value, max=max_value)
