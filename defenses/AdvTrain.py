@@ -1,4 +1,4 @@
-from attacks import BaseAttacker
+from attacks import AdversarialInputAttacker
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -8,7 +8,7 @@ from optimizer import default_optimizer
 
 
 class AdversarialTraining():
-    def __init__(self, attacker: BaseAttacker, model: nn.Module,
+    def __init__(self, attacker: AdversarialInputAttacker, model: nn.Module,
                  criterion=nn.CrossEntropyLoss(),
                  device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
                  optimizer: Callable = default_optimizer):

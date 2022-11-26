@@ -2,10 +2,10 @@ import torch
 from attacks.utils import *
 from torch import nn
 from typing import Callable
-from .base import BaseAttacker
+from .AdversarialInputBase import AdversarialInputAttacker
 
 
-class MI_FGSM(BaseAttacker):
+class MI_FGSM(AdversarialInputAttacker):
     def __init__(self, model: nn.Module, epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = False,
                  step_size: float = 5e-3,

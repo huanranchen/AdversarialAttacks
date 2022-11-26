@@ -3,10 +3,10 @@ import torch
 from attacks.utils import *
 from torch import nn
 from typing import Callable
-from .base import BaseAttacker
+from .AdversarialInputBase import AdversarialInputAttacker
 
 
-class DI_MI_FGSM(BaseAttacker):
+class DI_MI_FGSM(AdversarialInputAttacker):
     '''
     DI-FGSM is not using data augmentation to increase data for optimizing perturbations.
     DI-FGSM actually is using differentiable data augmentations,

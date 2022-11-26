@@ -2,7 +2,7 @@ import torch
 from abc import abstractmethod
 
 
-class BaseAttacker():
+class AdversarialInputAttacker():
     def __init__(self):
         pass
 
@@ -13,8 +13,3 @@ class BaseAttacker():
     def __call__(self, *args, **kwargs):
         return self.attack(*args, **kwargs)
 
-    def begin_attack(self, *args, **kwargs):
-        pass
-
-    def end_attack(self, *args, **kwargs):
-        pass

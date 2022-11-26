@@ -5,10 +5,10 @@ import sys
 from typing import List
 
 sys.path.append('./')
-from attacks import BaseAttacker
+from attacks import AdversarialInputAttacker
 
 
-def test_transfer_attack_acc(attacker: BaseAttacker, loader: DataLoader,
+def test_transfer_attack_acc(attacker: AdversarialInputAttacker, loader: DataLoader,
                              target_models: List[nn.Module]) -> List[float]:
     transfer_accs = [0] * len(target_models)
     denominator = 0

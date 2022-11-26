@@ -6,10 +6,10 @@ import torch
 from torch import nn
 from typing import Callable
 from attacks.utils import *
-from .base import BaseAttacker
+from .AdversarialInputBase import AdversarialInputAttacker
 
 
-class PGD(BaseAttacker):
+class PGD(AdversarialInputAttacker):
     def __init__(self, model: nn.Module, epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = True,
                  step_size: float = 5e-3,

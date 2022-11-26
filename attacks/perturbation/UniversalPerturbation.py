@@ -1,4 +1,4 @@
-from attacks.AdversarialInput.base import BaseAttacker
+from attacks.AdversarialInput.AdversarialInputBase import AdversarialInputAttacker
 from typing import Callable, List, Iterable
 from torch import nn
 from attacks.utils import *
@@ -26,14 +26,14 @@ class Perturbation():
         self.perturbation.requires_grad = requires_grad
 
 
-class UniversalPerturbation(BaseAttacker):
+class UniversalPerturbation():
     '''
     please set your learning rate in optimizer
     set data augmentation in your loader.
     '''
 
     def __init__(self,
-                 attacker: BaseAttacker,
+                 attacker: AdversarialInputAttacker,
                  models: List[nn.Module],
                  perturbation: Perturbation,
                  transformation: nn.Module = nn.Identity(),
@@ -66,8 +66,8 @@ class UniversalPerturbation(BaseAttacker):
                 if is_clamp:
                     x = clamp(x)
                 x = self.transform(x)
-                for model in self.models:
-                    self.attacker.attack(model, x, y)
+
+                self.attacker.attack(x, y)
 
                 iter_step += 1
                 if iter_step > total_iter_step:
