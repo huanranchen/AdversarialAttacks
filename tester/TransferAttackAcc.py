@@ -5,9 +5,6 @@ import sys
 from typing import List, Callable
 from tqdm import tqdm
 
-sys.path.append('./')
-from attacks import AdversarialInputAttacker
-
 
 def test_transfer_attack_acc(attacker: Callable, loader: DataLoader,
                              target_models: List[nn.Module],

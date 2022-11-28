@@ -4,15 +4,15 @@ PGD: Projected Gradient Descent
 
 import torch
 from torch import nn
-from typing import Callable
+from typing import Callable, List
 from attacks.utils import *
 from .AdversarialInputBase import AdversarialInputAttacker
 
 
 class PGD(AdversarialInputAttacker):
-    def __init__(self, model: nn.Module, epsilon: float = 16 / 255,
+    def __init__(self, model: List[nn.Module], epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = True,
-                 step_size: float = 5e-3,
+                 step_size: float = 16 / 255 / 10,
                  criterion: Callable = nn.CrossEntropyLoss().to(
                      torch.device('cuda' if torch.cuda.is_available() else 'cpu')),
                  targeted_attack=False,
@@ -30,7 +30,8 @@ class PGD(AdversarialInputAttacker):
 
     def init(self):
         # set the model parameters requires_grad is False
-        self.model.requires_grad_(False)
+        for model in self.model:
+            model.requires_grad_(False)
 
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
@@ -38,13 +39,16 @@ class PGD(AdversarialInputAttacker):
         return x
 
     def attack(self, x, y, ):
+
         original_x = x.clone()
         if self.random_start:
             x = self.perturb(x)
 
         for _ in range(self.total_step):
             x.requires_grad = True
-            loss = self.criterion(self.model(x), y)
+            loss = 0
+            for model in self.model:
+                loss += self.criterion(model(x), y)
             loss.backward()
             grad = x.grad
             x.requires_grad = False

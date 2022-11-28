@@ -2,7 +2,7 @@ from kornia import augmentation as KA
 import torch
 from attacks.utils import *
 from torch import nn
-from typing import Callable
+from typing import Callable, List
 from .AdversarialInputBase import AdversarialInputAttacker
 
 
@@ -12,7 +12,7 @@ class DI_MI_FGSM(AdversarialInputAttacker):
     DI-FGSM actually is using differentiable data augmentations,
     and this data augmentation can be viewed as a part of model(from SI-FGSM)
     '''
-    def __init__(self, model: nn.Module, epsilon: float = 16 / 255,
+    def __init__(self, model: List[nn.Module], epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = False,
                  step_size: float = 5e-3,
                  criterion: Callable = nn.CrossEntropyLoss(),
@@ -35,7 +35,8 @@ class DI_MI_FGSM(AdversarialInputAttacker):
 
     def init(self):
         # set the model parameters requires_grad is False
-        self.model.requires_grad_(False)
+        for model in self.model:
+            model.requires_grad_(False)
 
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
@@ -50,7 +51,9 @@ class DI_MI_FGSM(AdversarialInputAttacker):
         for _ in range(self.total_step):
             x.requires_grad = True
             aug_x = self.aug_policy(x)
-            loss = self.criterion(self.model(aug_x), y)
+            loss = 0
+            for model in self.model:
+                loss += self.criterion(model(aug_x), y)
             loss.backward()
             grad = x.grad
             x.requires_grad = False
