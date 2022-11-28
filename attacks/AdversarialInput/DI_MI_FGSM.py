@@ -4,6 +4,7 @@ from attacks.utils import *
 from torch import nn
 from typing import Callable, List
 from .AdversarialInputBase import AdversarialInputAttacker
+from torchvision import transforms
 
 
 class DI_MI_FGSM(AdversarialInputAttacker):
@@ -12,9 +13,10 @@ class DI_MI_FGSM(AdversarialInputAttacker):
     DI-FGSM actually is using differentiable data augmentations,
     and this data augmentation can be viewed as a part of model(from SI-FGSM)
     '''
+
     def __init__(self, model: List[nn.Module], epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = False,
-                 step_size: float = 5e-3,
+                 step_size: float = 16 / 255 / 10,
                  criterion: Callable = nn.CrossEntropyLoss(),
                  targeted_attack=False,
                  mu: float = 1,
@@ -27,10 +29,9 @@ class DI_MI_FGSM(AdversarialInputAttacker):
         self.criterion = criterion
         self.targerted_attack = targeted_attack
         self.mu = mu
-        self.aug_policy = KA.AugmentationSequential(
-            KA.RandomCrop((28, 28), padding=4),
-
-        )
+        self.aug_policy = transforms.Compose([
+            transforms.RandomCrop((295, 295), padding=4),
+        ])
         super(DI_MI_FGSM, self).__init__()
 
     def init(self):
@@ -44,6 +45,7 @@ class DI_MI_FGSM(AdversarialInputAttacker):
         return x
 
     def attack(self, x, y, ):
+        original_x = x.clone()
         momentum = torch.zeros_like(x)
         if self.random_start:
             x = self.perturb(x)
@@ -65,6 +67,6 @@ class DI_MI_FGSM(AdversarialInputAttacker):
                 momentum = self.mu * momentum + grad / torch.norm(grad, p=1)
                 x += self.step_size * momentum.sign()
             x = clamp(x)
+            x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)
 
         return x
-

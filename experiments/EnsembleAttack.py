@@ -1,6 +1,6 @@
 import os
 from data import get_NIPS17_loader
-from attacks import BIM, FGSM, PGD, DI_MI_FGSM, MI_FGSM
+from attacks import BIM, FGSM, PGD, DI_MI_FGSM
 from models import *
 import torch
 from tqdm import tqdm
@@ -33,5 +33,5 @@ for model in origin_test_models:
 # adv_x = x + p.perturbation
 # test_multimodel_acc_one_image(x, y, test_models)
 
-attacker = MI_FGSM(train_models)
+attacker = PGD(train_models)
 test_transfer_attack_acc(attacker, loader, test_models)

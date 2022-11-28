@@ -8,7 +8,7 @@ from .AdversarialInputBase import AdversarialInputAttacker
 class MI_FGSM(AdversarialInputAttacker):
     def __init__(self, model: List[nn.Module], epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = False,
-                 step_size: float = 5e-3,
+                 step_size: float = 16 / 255 / 10,
                  criterion: Callable = nn.CrossEntropyLoss(),
                  targeted_attack=False,
                  mu: float = 1,
@@ -35,6 +35,7 @@ class MI_FGSM(AdversarialInputAttacker):
         return x
 
     def attack(self, x, y, ):
+        original_x = x.clone()
         momentum = torch.zeros_like(x)
         if self.random_start:
             x = self.perturb(x)
@@ -55,5 +56,6 @@ class MI_FGSM(AdversarialInputAttacker):
                 momentum = self.mu * momentum + grad / torch.norm(grad, p=1)
                 x += self.step_size * momentum.sign()
             x = clamp(x)
+            x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)
 
         return x
