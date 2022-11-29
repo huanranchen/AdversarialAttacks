@@ -1,3 +1,4 @@
+import torch
 from .AdversarialInputBase import AdversarialInputAttacker
 from typing import Callable, List, Iterable
 from attacks.utils import *
@@ -15,7 +16,7 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
                  criterion: Callable = nn.CrossEntropyLoss(),
                  targeted_attack=False,
                  mu=1,
-                 outer_optimizer = None,
+                 outer_optimizer=None,
                  ):
         self.models = model
         self.random_start = random_start
@@ -42,13 +43,14 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
     def attack(self, x, y, ):
         original_x = x.clone()
         momentum = torch.zeros_like(x)
+        self.outer_momentum = torch.zeros_like(x)
         if self.random_start:
             x = self.perturb(x)
 
         for _ in range(self.total_step):
-            x.requires_grad = True
             self.begin_attack(x.clone().detach())
             for model in self.models:
+                x.requires_grad = True
                 loss = self.criterion(model(x), y)
                 loss.backward()
                 grad = x.grad
@@ -61,9 +63,10 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
                 else:
                     momentum = self.mu * momentum + grad / torch.norm(grad, p=1)
                     x += self.step_size * momentum.sign()
+                    # x += self.step_size * grad.sign()
                 x = clamp(x)
                 x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)
-            self.end_attack(x)
+            x = self.end_attack(x)
             x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)
 
         return x
@@ -74,7 +77,7 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
         self.grad_record = []
 
     @torch.no_grad()
-    def end_attack(self, now: torch.tensor, ksi=1):
+    def end_attack(self, now: torch.tensor, ksi=16 / 255 / 10):
         '''
         theta: original_patch
         theta_hat: now patch in optimizer
@@ -83,8 +86,12 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
         '''
         patch = now
         if self.outer_optimizer is None:
-            patch.mul_(ksi)
-            patch.add_((1 - ksi) * self.original)
+            fake_grad = (patch - self.original)
+            self.outer_momentum = self.mu * self.outer_momentum + fake_grad / torch.norm(fake_grad, p=1)
+            patch.mul_(0)
+            patch.add_(self.original)
+            patch.add_(ksi * self.outer_momentum.sign())
+            # patch.add_(ksi * fake_grad)
         else:
             fake_grad = - ksi * (patch - self.original)
             self.outer_optimizer.zero_grad()

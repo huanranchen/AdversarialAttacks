@@ -21,6 +21,7 @@ class MI_FGSM(AdversarialInputAttacker):
         self.criterion = criterion
         self.targerted_attack = targeted_attack
         self.mu = mu
+        self.init()
         
         super(MI_FGSM, self).__init__()
 
