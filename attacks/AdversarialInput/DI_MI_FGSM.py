@@ -21,6 +21,7 @@ class DI_MI_FGSM(AdversarialInputAttacker):
                  targeted_attack=False,
                  mu: float = 1,
                  ):
+        super(DI_MI_FGSM, self).__init__(model)
         self.random_start = random_start
         self.epsilon = epsilon
         self.total_step = total_step
@@ -31,12 +32,7 @@ class DI_MI_FGSM(AdversarialInputAttacker):
         self.aug_policy = transforms.Compose([
             transforms.RandomCrop((295, 295), padding=4),
         ])
-        super(DI_MI_FGSM, self).__init__(model)
-
-    def init(self):
-        # set the model parameters requires_grad is False
-        for model in self.models:
-            model.requires_grad_(False)
+        self.init()
 
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon

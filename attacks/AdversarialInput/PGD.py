@@ -27,11 +27,6 @@ class PGD(AdversarialInputAttacker):
         self.device = device
         super(PGD, self).__init__(model)
 
-    def init(self):
-        # set the model parameters requires_grad is False
-        for model in self.models:
-            model.requires_grad_(False)
-
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
         x = clamp(x)
@@ -47,7 +42,7 @@ class PGD(AdversarialInputAttacker):
             x.requires_grad = True
             loss = 0
             for model in self.models:
-                loss += self.criterion(model(x), y)
+                loss += self.criterion(model(x.to(model.device)), y.to(model.device)).to(x.device)
             loss.backward()
             grad = x.grad
             x.requires_grad = False

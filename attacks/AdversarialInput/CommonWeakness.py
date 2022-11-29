@@ -18,7 +18,6 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
                  mu=1,
                  outer_optimizer=None,
                  ):
-        self.models = model
         self.random_start = random_start
         self.epsilon = epsilon
         self.total_step = total_step
@@ -27,13 +26,7 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
         self.targerted_attack = targeted_attack
         self.mu = mu
         self.outer_optimizer = outer_optimizer
-        self.init()
-        super(MI_CosineSimilarityEncourager, self).__init__()
-
-    def init(self):
-        # set the model parameters requires_grad is False
-        for model in self.models:
-            model.requires_grad_(False)
+        super(MI_CosineSimilarityEncourager, self).__init__(model)
 
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
@@ -51,7 +44,7 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
             self.begin_attack(x.clone().detach())
             for model in self.models:
                 x.requires_grad = True
-                loss = self.criterion(model(x), y)
+                loss = self.criterion(model(x.to(model.device)), y.to(model.device))
                 loss.backward()
                 grad = x.grad
                 self.grad_record.append(grad)

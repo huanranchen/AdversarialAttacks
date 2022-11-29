@@ -21,14 +21,7 @@ class MI_FGSM(AdversarialInputAttacker):
         self.criterion = criterion
         self.targerted_attack = targeted_attack
         self.mu = mu
-        self.init()
-        
         super(MI_FGSM, self).__init__(model)
-
-    def init(self):
-        # set the model parameters requires_grad is False
-        for model in self.models:
-            model.requires_grad_(False)
 
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
@@ -45,7 +38,7 @@ class MI_FGSM(AdversarialInputAttacker):
             x.requires_grad = True
             loss = 0
             for model in self.models:
-                loss += self.criterion(model(x), y)
+                loss += self.criterion(model(x.to(model.device)), y.to(model.device)).to(x.device)
             loss.backward()
             grad = x.grad
             x.requires_grad = False

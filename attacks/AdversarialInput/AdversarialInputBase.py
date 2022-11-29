@@ -6,6 +6,8 @@ from typing import List
 class AdversarialInputAttacker():
     def __init__(self, model: List[torch.nn.Module]):
         self.models = model
+        self.init()
+        self.model_distribute()
 
     @abstractmethod
     def attack(self, *args, **kwargs):
@@ -23,3 +25,9 @@ class AdversarialInputAttacker():
             'my parallel must ensure that num_gpus >= num_models'
         for i, model in enumerate(self.models):
             model.to(torch.device(f'cuda:{i}'))
+            model.device = torch.device(f'cuda:{i}')
+
+    def init(self):
+        # set the model parameters requires_grad is False
+        for model in self.models:
+            model.requires_grad_(False)
