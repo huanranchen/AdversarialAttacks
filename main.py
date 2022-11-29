@@ -35,4 +35,4 @@ for model in origin_test_models:
 
 attacker = MI_CosineSimilarityEncourager(train_models)
 test_transfer_attack_acc(attacker, loader, test_models)
-for
+
