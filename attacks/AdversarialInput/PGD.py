@@ -18,7 +18,6 @@ class PGD(AdversarialInputAttacker):
                  targeted_attack=False,
                  device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
                  ):
-        self.model = model
         self.random_start = random_start
         self.epsilon = epsilon
         self.total_step = total_step
@@ -26,11 +25,11 @@ class PGD(AdversarialInputAttacker):
         self.criterion = criterion
         self.targerted_attack = targeted_attack
         self.device = device
-        super(PGD, self).__init__()
+        super(PGD, self).__init__(model)
 
     def init(self):
         # set the model parameters requires_grad is False
-        for model in self.model:
+        for model in self.models:
             model.requires_grad_(False)
 
     def perturb(self, x):
@@ -47,7 +46,7 @@ class PGD(AdversarialInputAttacker):
         for _ in range(self.total_step):
             x.requires_grad = True
             loss = 0
-            for model in self.model:
+            for model in self.models:
                 loss += self.criterion(model(x), y)
             loss.backward()
             grad = x.grad

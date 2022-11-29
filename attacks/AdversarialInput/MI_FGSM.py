@@ -13,7 +13,7 @@ class MI_FGSM(AdversarialInputAttacker):
                  targeted_attack=False,
                  mu: float = 1,
                  ):
-        self.model = model
+        self.models = model
         self.random_start = random_start
         self.epsilon = epsilon
         self.total_step = total_step
@@ -23,11 +23,11 @@ class MI_FGSM(AdversarialInputAttacker):
         self.mu = mu
         self.init()
         
-        super(MI_FGSM, self).__init__()
+        super(MI_FGSM, self).__init__(model)
 
     def init(self):
         # set the model parameters requires_grad is False
-        for model in self.model:
+        for model in self.models:
             model.requires_grad_(False)
 
     def perturb(self, x):
@@ -44,7 +44,7 @@ class MI_FGSM(AdversarialInputAttacker):
         for _ in range(self.total_step):
             x.requires_grad = True
             loss = 0
-            for model in self.model:
+            for model in self.models:
                 loss += self.criterion(model(x), y)
             loss.backward()
             grad = x.grad

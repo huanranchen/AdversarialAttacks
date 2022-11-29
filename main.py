@@ -1,17 +1,16 @@
 import os
 from data import get_NIPS17_loader
 from attacks import BIM, FGSM, PGD, DI_MI_FGSM, MI_FGSM, MI_CosineSimilarityEncourager
-from models import *
+from models import inception_v4, inception_v3, inception_resnet_v2, resnet152, BaseNormModel
 import torch
-from tqdm import tqdm
 from torch.nn import functional as F
 from tester import test_multimodel_acc_one_image, test_transfer_attack_acc
 
 loader = get_NIPS17_loader(batch_size=16)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-origin_train_models = [resnet152, resnet18]
-origin_test_models = [inception_v3]
+origin_train_models = [inception_v3, inception_v4, inception_resnet_v2]
+origin_test_models = [resnet152]
 
 train_models, test_models = [], []
 for model in origin_train_models:
@@ -33,6 +32,6 @@ for model in origin_test_models:
 # adv_x = x + p.perturbation
 # test_multimodel_acc_one_image(x, y, test_models)
 
-attacker = MI_CosineSimilarityEncourager(train_models)
+attacker = MI_FGSM(train_models)
 test_transfer_attack_acc(attacker, loader, test_models)
 
