@@ -4,6 +4,7 @@ from typing import Callable, List, Iterable
 from attacks.utils import *
 from .utils import cosine_similarity
 from torch import nn
+import random
 
 
 class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
@@ -98,3 +99,65 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
         del self.grad_record
         del self.original
         return patch
+
+
+class MI_RandomWeight(AdversarialInputAttacker):
+    def __init__(self, model: List[nn.Module], epsilon: float = 16 / 255,
+                 total_step: int = 10, random_start: bool = False,
+                 step_size: float = 16 / 255 / 5,
+                 criterion: Callable = nn.CrossEntropyLoss(),
+                 targeted_attack=False,
+                 mu: float = 1,
+                 ):
+        self.models = model
+        self.random_start = random_start
+        self.epsilon = epsilon
+        self.total_step = total_step
+        self.step_size = step_size
+        self.criterion = criterion
+        self.targerted_attack = targeted_attack
+        self.mu = mu
+        super(MI_RandomWeight, self).__init__(model)
+
+    def perturb(self, x):
+        x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
+        x = clamp(x)
+        return x
+
+    def random_by_mean(self, mean: float = 1, eps=0.1) -> float:
+        '''
+        random a number in [0, 2*mean]. The expectation is mean.
+        :param mean:
+        :return:
+        '''
+        x = (random.random() - 0.5) * 2  # with range [-1, 1], mean 0
+        x *= eps  # delta = 2*eps
+        x = x + mean  # expectation is mean
+        return x
+
+    def attack(self, x, y, ):
+        original_x = x.clone()
+        momentum = torch.zeros_like(x)
+        if self.random_start:
+            x = self.perturb(x)
+
+        for _ in range(self.total_step):
+            x.requires_grad = True
+            loss = 0
+            for model in self.models:
+                loss += self.criterion(model(x.to(model.device)), y.to(model.device)).to(x.device) \
+                        * self.random_by_mean()
+            loss.backward()
+            grad = x.grad
+            x.requires_grad = False
+            # update
+            if self.targerted_attack:
+                momentum = self.mu * momentum - grad / torch.norm(grad, p=1)
+                x += self.step_size * momentum.sign()
+            else:
+                momentum = self.mu * momentum + grad / torch.norm(grad, p=1)
+                x += self.step_size * momentum.sign()
+            x = clamp(x)
+            x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)
+
+        return x

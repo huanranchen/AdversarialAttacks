@@ -36,7 +36,7 @@ class NIPS17(Dataset):
 def get_NIPS17_loader(batch_size=64,
                       num_workers=8,
                       pin_memory=True,
-                      download=True,
+                      download=False,
                       **kwargs,
                       ):
     if download:
