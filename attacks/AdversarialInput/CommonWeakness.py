@@ -124,7 +124,7 @@ class MI_RandomWeight(AdversarialInputAttacker):
         x = clamp(x)
         return x
 
-    def random_by_mean(self, mean: float = 1, eps=0.1) -> float:
+    def random_by_mean(self, mean: float = 1, eps=0.025) -> float:
         '''
         random a number in [0, 2*mean]. The expectation is mean.
         :param mean:
