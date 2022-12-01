@@ -13,7 +13,6 @@ class MI_FGSM(AdversarialInputAttacker):
                  targeted_attack=False,
                  mu: float = 1,
                  ):
-        self.models = model
         self.random_start = random_start
         self.epsilon = epsilon
         self.total_step = total_step
@@ -29,6 +28,7 @@ class MI_FGSM(AdversarialInputAttacker):
         return x
 
     def attack(self, x, y, ):
+        N = x.shape[0]
         original_x = x.clone()
         momentum = torch.zeros_like(x)
         if self.random_start:
@@ -36,18 +36,19 @@ class MI_FGSM(AdversarialInputAttacker):
 
         for _ in range(self.total_step):
             x.requires_grad = True
-            loss = 0
+            logit = 0
             for model in self.models:
-                loss += self.criterion(model(x.to(model.device)), y.to(model.device)).to(x.device)
+                logit += model(x.to(model.device)).to(x.device)
+            loss = self.criterion(logit, y)
             loss.backward()
             grad = x.grad
             x.requires_grad = False
             # update
             if self.targerted_attack:
-                momentum = self.mu * momentum - grad / torch.norm(grad, p=1)
+                momentum = self.mu * momentum - grad / torch.norm(grad.reshape(N, -1), p=1, dim=1).view(N, 1, 1, 1)
                 x += self.step_size * momentum.sign()
             else:
-                momentum = self.mu * momentum + grad / torch.norm(grad, p=1)
+                momentum = self.mu * momentum + grad / torch.norm(grad.reshape(N, -1), p=1, dim=1).view(N, 1, 1, 1)
                 x += self.step_size * momentum.sign()
             x = clamp(x)
             x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)

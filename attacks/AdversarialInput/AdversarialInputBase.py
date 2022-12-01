@@ -31,3 +31,4 @@ class AdversarialInputAttacker():
         # set the model parameters requires_grad is False
         for model in self.models:
             model.requires_grad_(False)
+            model.eval()
