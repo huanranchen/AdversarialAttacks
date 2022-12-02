@@ -31,6 +31,7 @@ class MI_SAM(AdversarialInputAttacker):
         return x
 
     def attack(self, x, y, ):
+        N = x.shape[0]
         original_x = x.clone()
         momentum = torch.zeros_like(x)
         if self.random_start:
@@ -62,10 +63,10 @@ class MI_SAM(AdversarialInputAttacker):
             x.requires_grad = False
             # update
             if self.targerted_attack:
-                momentum = self.mu * momentum - grad / torch.norm(grad, p=1)
+                momentum = self.mu * momentum - grad / torch.norm(grad.reshape(N, -1), p=1, dim=1).view(N, 1, 1, 1)
                 x += self.step_size * momentum.sign()
             else:
-                momentum = self.mu * momentum + grad / torch.norm(grad, p=1)
+                momentum = self.mu * momentum + grad / torch.norm(grad.reshape(N, -1), p=1, dim=1).view(N, 1, 1, 1)
                 x += self.step_size * momentum.sign()
             x = clamp(x)
             x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)
