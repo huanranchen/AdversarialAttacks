@@ -13,7 +13,7 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
                  epsilon: float = 16 / 255,
                  total_step: int = 10,
                  random_start: bool = False,
-                 step_size: float = 16 / 255 / 10,
+                 step_size: float = 50,
                  criterion: Callable = nn.CrossEntropyLoss(),
                  targeted_attack=False,
                  mu=1,
@@ -35,6 +35,7 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
         return x
 
     def attack(self, x, y, ):
+        N = x.shape[0]
         original_x = x.clone()
         momentum = torch.zeros_like(x)
         self.outer_momentum = torch.zeros_like(x)
@@ -52,12 +53,12 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
                 x.requires_grad = False
                 # update
                 if self.targerted_attack:
-                    momentum = self.mu * momentum - grad / torch.norm(grad, p=1)
-                    x += self.step_size * momentum.sign()
+                    momentum = self.mu * momentum - grad / torch.norm(grad.reshape(N, -1), p=2, dim=1).view(N, 1, 1, 1)
+                    x += self.step_size * momentum
                 else:
-                    momentum = self.mu * momentum + grad / torch.norm(grad, p=1)
-                    x += self.step_size * momentum.sign()
-                    # x += self.step_size * grad.sign()
+                    momentum = self.mu * momentum + grad / torch.norm(grad.reshape(N, -1), p=2, dim=1).view(N, 1, 1, 1)
+                    x += self.step_size * momentum
+                    # x += self.step_size * grad / torch.norm(grad.reshape(N, -1), p=2, dim=1).view(N, 1, 1, 1)
                 x = clamp(x)
                 x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)
             x = self.end_attack(x)
@@ -71,7 +72,7 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
         self.grad_record = []
 
     @torch.no_grad()
-    def end_attack(self, now: torch.tensor, ksi=16 / 255 / 10):
+    def end_attack(self, now: torch.tensor, ksi=16 / 255 / 5):
         '''
         theta: original_patch
         theta_hat: now patch in optimizer
@@ -107,7 +108,7 @@ class MI_RandomWeight(AdversarialInputAttacker):
                  step_size: float = 16 / 255 / 5,
                  criterion: Callable = nn.CrossEntropyLoss(),
                  targeted_attack=False,
-                 mu: float = 1,
+                 mu: float = 50,
                  ):
         self.random_start = random_start
         self.epsilon = epsilon
@@ -167,7 +168,6 @@ class MI_RandomWeight(AdversarialInputAttacker):
         return x
 
 
-
 class MI_CommonWeakness(AdversarialInputAttacker):
     def __init__(self,
                  model: List[nn.Module],
@@ -179,7 +179,8 @@ class MI_CommonWeakness(AdversarialInputAttacker):
                  targeted_attack=False,
                  mu=1,
                  outer_optimizer=None,
-                 reverse_step_size=16 / 255 / 10,
+                 reverse_step_size=16 / 255 / 15,
+                 inner_step_size: float = 250,
                  ):
         self.random_start = random_start
         self.epsilon = epsilon
@@ -191,6 +192,7 @@ class MI_CommonWeakness(AdversarialInputAttacker):
         self.outer_optimizer = outer_optimizer
         self.reverse_step_size = reverse_step_size
         super(MI_CommonWeakness, self).__init__(model)
+        self.inner_step_size = inner_step_size
 
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
@@ -198,20 +200,22 @@ class MI_CommonWeakness(AdversarialInputAttacker):
         return x
 
     def attack(self, x, y, ):
+        N = x.shape[0]
         original_x = x.clone()
+        inner_momentum = torch.zeros_like(x)
         momentum = torch.zeros_like(x)
         self.outer_momentum = torch.zeros_like(x)
         if self.random_start:
             x = self.perturb(x)
 
         for _ in range(self.total_step):
-            self.begin_attack(x.clone().detach())
             # --------------------------------------------------------------------------------#
             # first step
             x.requires_grad = True
-            loss = 0
+            logit = 0
             for model in self.models:
-                loss += self.criterion(model(x.to(model.device)), y.to(model.device)).to(x.device)
+                logit += model(x.to(model.device)).to(x.device)
+            loss = self.criterion(logit, y)
             loss.backward()
             grad = x.grad
             x.requires_grad = False
@@ -219,9 +223,11 @@ class MI_CommonWeakness(AdversarialInputAttacker):
                 pass
             else:
                 x -= self.reverse_step_size * grad.sign()
+                # x -= self.reverse_step_size * grad / torch.norm(grad.reshape(N, -1), p=2, dim=1).view(N, 1, 1, 1)
 
             # --------------------------------------------------------------------------------#
             # second step
+            self.begin_attack(x.clone().detach())
             for model in self.models:
                 x.requires_grad = True
                 loss = self.criterion(model(x.to(model.device)), y.to(model.device))
@@ -231,12 +237,13 @@ class MI_CommonWeakness(AdversarialInputAttacker):
                 x.requires_grad = False
                 # update
                 if self.targerted_attack:
-                    momentum = self.mu * momentum - grad / torch.norm(grad, p=1)
-                    x += self.step_size * momentum.sign()
+                    inner_momentum = self.mu * inner_momentum - grad / torch.norm(grad.reshape(N, -1), p=2, dim=1).view(
+                        N, 1, 1, 1)
+                    x += self.inner_step_size * inner_momentum
                 else:
-                    momentum = self.mu * momentum + grad / torch.norm(grad, p=1)
-                    x += self.step_size * momentum.sign()
-                    # x += self.step_size * grad.sign()
+                    inner_momentum = self.mu * inner_momentum + grad / torch.norm(grad.reshape(N, -1), p=2, dim=1).view(
+                        N, 1, 1, 1)
+                    x += self.inner_step_size * inner_momentum
                 x = clamp(x)
                 x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)
             x = self.end_attack(x)

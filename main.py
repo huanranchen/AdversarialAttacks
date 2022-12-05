@@ -13,8 +13,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # origin_train_models = [vgg16, inception_v3, convnext_tiny, regnet_x_400mf,
 #                        resnet152, shufflenet_v2_x0_5, mnasnet0_5, efficientnet_b0]
 # origin_test_models = [swin_s]
-origin_train_models = [inception_v3, inception_v4, inception_resnet_v2]
-origin_test_models = [resnet152, ]
+origin_train_models = [inception_v4,inception_v3, resnet152, ]
+origin_test_models = [inception_resnet_v2]
 
 train_models, test_models = [], []
 for model in origin_train_models:
@@ -36,5 +36,5 @@ for model in origin_test_models:
 # adv_x = x + p.perturbation
 # test_multimodel_acc_one_image(x, y, test_models)
 
-attacker = BIM(train_models)
+attacker = MI_CommonWeakness(train_models)
 test_transfer_attack_acc(attacker, loader, test_models)
