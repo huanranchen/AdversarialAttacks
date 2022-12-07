@@ -1,3 +1,3 @@
 import os
 # print(os.path.abspath(__file__))
-from .board import VisualBoard
+from .Landscape4Input import Landscape4Input
