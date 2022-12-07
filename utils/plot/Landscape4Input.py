@@ -41,9 +41,12 @@ class Landscape4Input():
         self.mesh_x = x
         self.mesh_y = y
 
+    @torch.no_grad()
     def draw(self, axes=None):
         self._find_direction()
         z = self._compute_for_draw()
+        if axes is None and self.mode == '3D':
+            axes = plt.axes(projection='3d')
         self._draw3D(self.mesh_x, self.mesh_y, z, axes)
 
     def _find_direction(self):
@@ -93,9 +96,9 @@ class Landscape4Input():
         if self.mode == '2D':
             plt.plot(mesh_x, mesh_z)
 
-        # plt.show()
+        plt.show()
         # plt.close()
-        plt.savefig(self.get_datetime_str() + ".png")
+        # plt.savefig(self.get_datetime_str() + ".png")
 
     @staticmethod
     def get_datetime_str(style='dt'):
