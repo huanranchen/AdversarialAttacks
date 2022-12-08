@@ -4,6 +4,7 @@ from torchvision import transforms
 
 __all__ = ['Randomization']
 
+
 class RandomizationFunction(object):
     '''
     reference:
@@ -57,8 +58,13 @@ class Randomization(torch.nn.Module):
         self.transforms = transform
         self.randomization = RandomizationFunction()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.i = 0
+
 
     def forward(self, x):
+        # img = transforms.ToPILImage()(x[0])
+        # img.save(f'./what/{self.i}.png')
+        # self.i += 1
         x = self.randomization(x)
         x = self.transforms(x)
         return self.model(x)

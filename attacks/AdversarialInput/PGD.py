@@ -40,9 +40,10 @@ class PGD(AdversarialInputAttacker):
 
         for _ in range(self.total_step):
             x.requires_grad = True
-            loss = 0
+            logit = 0
             for model in self.models:
-                loss += self.criterion(model(x.to(model.device)), y.to(model.device)).to(x.device)
+                logit += model(x.to(model.device)).to(x.device)
+            loss = self.criterion(logit, y)
             loss.backward()
             grad = x.grad
             x.requires_grad = False
