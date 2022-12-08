@@ -2,8 +2,9 @@ import torch
 import torch.nn.functional as F
 from torchvision import transforms
 
+__all__ = ['Randomization']
 
-class Randomization(object):
+class RandomizationFunction(object):
     '''
     reference:
     https://github.com/thu-ml/ares/blob/main/pytorch_ares/pytorch_ares/defense_torch/randomization.py
@@ -46,15 +47,15 @@ class Randomization(object):
         return self.input_transform(*args, **kwargs)
 
 
-class RandomizationModel(torch.nn.Module):
+class Randomization(torch.nn.Module):
     def __init__(self, model: torch.nn.Module,
                  transform=transforms.Compose([
                      transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                  ])):
-        super(RandomizationModel, self).__init__()
+        super(Randomization, self).__init__()
         self.model = model
         self.transforms = transform
-        self.randomization = Randomization()
+        self.randomization = RandomizationFunction()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def forward(self, x):
