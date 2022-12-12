@@ -30,8 +30,8 @@ class Landscape4Input():
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def synthesize_coordinates(self,
-                               x_min=-16/255, x_max=16/255, x_interval=16/255/20,
-                               y_min=-16/255, y_max=16/255, y_interval=16/255/20):
+                               x_min=-16 / 255, x_max=16 / 255, x_interval=1 / 255,
+                               y_min=-16 / 255, y_max=16 / 255, y_interval=1 / 255):
         x = np.arange(x_min, x_max, x_interval)
         y = np.arange(y_min, y_max, y_interval)
         self.mesh_x, self.mesh_y = np.meshgrid(x, y)
