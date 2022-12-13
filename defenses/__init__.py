@@ -1,3 +1,1 @@
-from .BitDepthReduction import *
-from .JPEGCompression import *
-from .Randomization import *
+from Transformations import BitDepthReduction, Randomization, JPEGCompression

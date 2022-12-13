@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
+import random
 
 __all__ = ['Randomization']
 
@@ -9,8 +10,6 @@ class RandomizationFunction(object):
     '''
     reference:
     https://github.com/thu-ml/ares/blob/main/pytorch_ares/pytorch_ares/defense_torch/randomization.py
-
-    modified by Huanran Chen
     '''
 
     def __init__(self, prob=0.8, crop_lst=[0.1, 0.08, 0.06, 0.04, 0.02]):
@@ -68,3 +67,31 @@ class Randomization(torch.nn.Module):
         x = self.randomization(x)
         x = self.transforms(x)
         return self.model(x)
+
+
+# class Randomization(torch.nn.Module):
+#     def __init__(self, model: torch.nn.Module,
+#                  transform=transforms.Compose([
+#                      transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+#                  ])):
+#         super(Randomization, self).__init__()
+#         self.model = model
+#         self.transforms = transform
+#         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#         self.i=0
+#
+#     def forward(self, x):
+#         # random resize
+#         resized_shape = random.randint(299, 331)
+#         resizer = transforms.Resize((resized_shape, resized_shape))
+#         x = resizer(x)
+#         # random pad
+#         pad_size = 331 - resized_shape
+#         left_pad_size = random.randint(0, pad_size)
+#         up_pad_size = random.randint(0, pad_size)
+#         x = F.pad(x, (left_pad_size, pad_size - left_pad_size, up_pad_size, pad_size - up_pad_size))
+#         img = transforms.ToPILImage()(x[0])
+#         img.save(f'./what/{self.i}.png')
+#         self.i += 1
+#         x = self.transforms(x)
+#         return self.model(x)
