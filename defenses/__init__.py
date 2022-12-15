@@ -1,1 +1,2 @@
-from Transformations import BitDepthReduction, Randomization, JPEGCompression
+from .Transformations import BitDepthReduction, Randomization, JPEGCompression
+from .NeuralRepresentationPurifier import NeuralRepresentationPurifier

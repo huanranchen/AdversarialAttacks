@@ -5,15 +5,15 @@ from models import *
 import torch
 from torch.nn import functional as F
 from tester import test_multimodel_acc_one_image, test_transfer_attack_acc
-from defenses import Randomization, JPEGCompression, BitDepthReduction
+from defenses import Randomization, JPEGCompression, BitDepthReduction, NeuralRepresentationPurifier
 
 loader = get_NIPS17_loader(batch_size=16)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 origin_train_models = [resnet18, resnet34, resnet50, resnet101]
-origin_test_models = [inception_v3, resnet152]
+origin_test_models = [inception_v3, regnet_x_400mf, swin_s, efficientnet_b0]
 # defense_list = [BaseNormModel, Randomization, JPEGCompression, BitDepthReduction]
-defense_list = [BaseNormModel]
+defense_list = [BaseNormModel, NeuralRepresentationPurifier]
 train_models, test_models = [], []
 for model in origin_train_models:
     model = BaseNormModel(model(pretrained=True)).to(device)
