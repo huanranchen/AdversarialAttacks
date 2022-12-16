@@ -8,7 +8,7 @@ class NeuralRepresentationPurifier(torch.nn.Module):
                  transform=transforms.Compose([
                      transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                  ]),
-                 mode='NRP',
+                 mode='NRP_resG',
                  ):
         super(NeuralRepresentationPurifier, self).__init__()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -21,9 +21,16 @@ class NeuralRepresentationPurifier(torch.nn.Module):
             self.netG = NRP_resG(3, 3, 64, 23)
             self.netG.load_state_dict(torch.load('resources/checkpoints/NRP/NRP_resG.pth'))
         self.netG.to(device=self.device)
+        self.i = 0
+        self.to_img = transforms.ToPILImage()
 
     def forward(self, x):
+        # img = self.to_img(x[0])
+        # img.save(f'./what/{self.i}_adv.png')
         x = self.netG(x)
+        # img = self.to_img(x[0])
+        # img.save(f'./what/{self.i}_denoise.png')
+        # self.i += 1
         x = self.transforms(x)
         return self.model(x)
 
