@@ -11,8 +11,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # origin_train_models = [resnet152]
 # origin_test_models = [resnet18]
-origin_train_models = [inception_v3, resnet152, inception_v4, ]
-origin_test_models = [inception_resnet_v2]
+origin_train_models = [resnet18, resnet34, resnet50, resnet101]
+origin_test_models = [swin_s]
 
 train_models, test_models = [], []
 for model in origin_train_models:
@@ -26,10 +26,10 @@ for model in origin_test_models:
     test_models.append(model)
 
 
-attacker = MI_CommonWeakness(train_models)
+attacker = MI_SAM(train_models)
 x, y = next(iter(loader))
 x = attacker(x, y)
 drawer = Landscape4Input(lambda x: F.cross_entropy(test_models[0](x), y.cuda()).item(),
-                         input=x.cuda(), mode='3D')
+                         input=x.cuda(), mode='2D')
 drawer.synthesize_coordinates()
 drawer.draw()

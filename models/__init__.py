@@ -1,4 +1,4 @@
-from .BaseNormModel import BaseNormModel
+from .BaseNormModel import BaseNormModel, Identity
 from torchvision.models import resnet18, resnet34, resnet50, resnet101
 from torchvision.models import alexnet, convnext_tiny, densenet121, efficientnet_b0, googlenet, inception_v3,\
     mnasnet0_75, mobilenet_v3_small, regnet_x_400mf, shufflenet_v2_x0_5, squeezenet1_0, vgg16, \
