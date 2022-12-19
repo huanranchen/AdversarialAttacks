@@ -3,10 +3,15 @@ from torchvision import transforms
 
 
 class BaseNormModel(torch.nn.Module):
-    def __init__(self, model: torch.nn.Module,
+    '''
+    **kwargs aims to unify with "pretrained=True"
+    '''
+    def __init__(self,
+                 model: torch.nn.Module,
                  transform=transforms.Compose([
                      transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                 ])):
+                 ]),
+                 **kwargs):
         super(BaseNormModel, self).__init__()
         self.model = model
         self.transforms = transform
@@ -18,7 +23,9 @@ class BaseNormModel(torch.nn.Module):
 
 
 class Identity(torch.nn.Module):
-    def __init__(self, model: torch.nn.Module,
+    def __init__(self,
+                 model: torch.nn.Module,
+                 **kwargs,
                  ):
         super(Identity, self).__init__()
         self.model = model
