@@ -16,5 +16,6 @@ def cosine_similarity(x: list):
     similarity = similarity[mask]
     return torch.mean(similarity).item()
 
+
 def clamp(x: torch.tensor, min_value: float = 0, max_value: float = 1):
     return torch.clamp(x, min=min_value, max=max_value)

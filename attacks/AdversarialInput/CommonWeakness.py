@@ -5,6 +5,7 @@ from attacks.utils import *
 from .utils import cosine_similarity
 from torch import nn
 import random
+from torchvision import transforms
 
 
 class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
@@ -95,7 +96,6 @@ class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
             patch.grad = fake_grad
             self.outer_optimizer.step()
         patch = clamp(patch)
-
         grad_similarity = cosine_similarity(self.grad_record)
         del self.grad_record
         del self.original
@@ -181,6 +181,7 @@ class MI_CommonWeakness(AdversarialInputAttacker):
                  outer_optimizer=None,
                  reverse_step_size=16 / 255 / 15,
                  inner_step_size: float = 250,
+                 DI=True,
                  ):
         self.random_start = random_start
         self.epsilon = epsilon
@@ -193,6 +194,13 @@ class MI_CommonWeakness(AdversarialInputAttacker):
         self.reverse_step_size = reverse_step_size
         super(MI_CommonWeakness, self).__init__(model)
         self.inner_step_size = inner_step_size
+        self.DI = DI
+        if DI:
+            self.aug_policy = transforms.Compose([
+                transforms.RandomCrop((int(224 * 0.9), int(224 * 0.9)), padding=224 - int(224 * 0.9)),
+            ])
+        else:
+            self.aug_policy = nn.Identity()
 
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
@@ -203,7 +211,6 @@ class MI_CommonWeakness(AdversarialInputAttacker):
         N = x.shape[0]
         original_x = x.clone()
         inner_momentum = torch.zeros_like(x)
-        momentum = torch.zeros_like(x)
         self.outer_momentum = torch.zeros_like(x)
         if self.random_start:
             x = self.perturb(x)
@@ -230,7 +237,8 @@ class MI_CommonWeakness(AdversarialInputAttacker):
             self.begin_attack(x.clone().detach())
             for model in self.models:
                 x.requires_grad = True
-                loss = self.criterion(model(x.to(model.device)), y.to(model.device))
+                aug_x = self.aug_policy(x)
+                loss = self.criterion(model(aug_x.to(model.device)), y.to(model.device))
                 loss.backward()
                 grad = x.grad
                 self.grad_record.append(grad)
@@ -280,7 +288,6 @@ class MI_CommonWeakness(AdversarialInputAttacker):
             patch.grad = fake_grad
             self.outer_optimizer.step()
         patch = clamp(patch)
-
         grad_similarity = cosine_similarity(self.grad_record)
         del self.grad_record
         del self.original
