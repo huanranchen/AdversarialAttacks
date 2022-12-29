@@ -181,7 +181,7 @@ class MI_CommonWeakness(AdversarialInputAttacker):
                  outer_optimizer=None,
                  reverse_step_size=16 / 255 / 15,
                  inner_step_size: float = 250,
-                 DI=True,
+                 DI=False,
                  ):
         self.random_start = random_start
         self.epsilon = epsilon
@@ -218,6 +218,7 @@ class MI_CommonWeakness(AdversarialInputAttacker):
         for _ in range(self.total_step):
             # --------------------------------------------------------------------------------#
             # first step
+            self.begin_attack(x.clone().detach())
             x.requires_grad = True
             logit = 0
             for model in self.models:
@@ -231,10 +232,10 @@ class MI_CommonWeakness(AdversarialInputAttacker):
             else:
                 x -= self.reverse_step_size * grad.sign()
                 # x -= self.reverse_step_size * grad / torch.norm(grad.reshape(N, -1), p=2, dim=1).view(N, 1, 1, 1)
-
             # --------------------------------------------------------------------------------#
             # second step
-            self.begin_attack(x.clone().detach())
+            x.grad = None
+            # self.begin_attack(x.clone().detach())
             for model in self.models:
                 x.requires_grad = True
                 aug_x = self.aug_policy(x)

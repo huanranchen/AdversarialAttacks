@@ -6,7 +6,8 @@ from models import *
 import torch
 from torch import nn
 from torch.nn import functional as F
-from tester import test_multimodel_acc_one_image, test_transfer_attack_acc
+from tester import test_multimodel_acc_one_image, test_transfer_attack_acc, \
+    test_transfer_attack_acc_and_cosine_similarity
 from defenses import Randomization, JPEGCompression, BitDepthReduction, \
     NeuralRepresentationPurifier, randomized_smoothing_resnet50
 
@@ -24,12 +25,12 @@ origin_test_models = [alexnet, convnext_tiny, densenet121, efficientnet_b0, goog
     mnasnet0_75, mobilenet_v3_small, regnet_x_400mf, shufflenet_v2_x0_5, squeezenet1_0, vgg16,
     vit_b_16, swin_s, maxvit_t, resnet152]
 # defense_list = [BaseNormModel, Randomization, JPEGCompression, BitDepthReduction]
-origin_test_models = [Wong2020Fast, Engstrom2019Robustness,
-                      Salman2020Do_R18, Salman2020Do_50_2,
-                      Debenedetti2022Light_XCiT_M12, Debenedetti2022Light_XCiT_L12]
+# origin_test_models = [Wong2020Fast, Engstrom2019Robustness,
+#                       Salman2020Do_R18, Salman2020Do_50_2,
+#                       Debenedetti2022Light_XCiT_M12, Debenedetti2022Light_XCiT_L12]
 
 train_defense_list = [Identity]  # 制造对抗样本的模型的防御
-defense_list = [Identity]
+defense_list = [BaseNormModel]
 train_models, test_models = [], []
 
 # for model in origin_train_models:

@@ -109,6 +109,7 @@ class MI_SAM(AdversarialInputAttacker):
         for _ in range(self.total_step):
             # --------------------------------------------------------------------------------#
             # first step
+            ori_x = x.clone()
             x.requires_grad = True
             logit = 0
             for model in self.models:
@@ -121,7 +122,7 @@ class MI_SAM(AdversarialInputAttacker):
                 pass
             else:
                 x -= self.reverse_step_size * grad.sign()
-
+            # x.grad = None
             # --------------------------------------------------------------------------------#
             # second step
             x.requires_grad = True
@@ -132,6 +133,7 @@ class MI_SAM(AdversarialInputAttacker):
             loss.backward()
             grad = x.grad
             x.requires_grad = False
+            x.mul_(0).add_(ori_x)
             # update
             if self.targerted_attack:
                 momentum = self.mu * momentum - grad / torch.norm(grad.reshape(N, -1), p=1, dim=1).view(N, 1, 1, 1)
