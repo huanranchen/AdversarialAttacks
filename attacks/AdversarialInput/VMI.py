@@ -60,18 +60,28 @@ class VMI_FGSM(AdversarialInputAttacker):
         return x
 
     def calculate_v(self, x: torch.tensor, y: torch.tensor, N=20, beta=1.5):
-        v = torch.zeros_like(x)
+        """
+
+        :param x:  B, C, H, D
+        :param y:
+        :param N:
+        :param beta:
+        :return:
+        """
+        B, C, H, D = x.shape
+        x = x.reshape(1, B, C, H, D)
+        x = x.repeat(N, 1, 1, 1, 1)  # N, B, C, H, D
         ranges = beta * self.epsilon
-        for _ in range(N):
-            now = x + (torch.rand_like(x) - 0.5) * 2 * ranges
-            now.requires_grad = True
-            logit = 0
-            for model in self.models:
-                logit += model(now.to(model.device)).to(now.device)
-            loss = self.criterion(logit, y)
-            loss.backward()
-            v += now.grad
-        v /= N
+        now = x + (torch.rand_like(x) - 0.5) * 2 * ranges
+        now = now.view(N*B, C, H, D)
+        now.requires_grad = True
+        logit = 0
+        for model in self.models:
+            logit += model(now.to(model.device)).to(now.device)
+        loss = self.criterion(logit, y.repeat(N))
+        loss.backward()
+        v = now.grad.view(N, B, C, H, D)  # N, B, C, H, D
+        v = v.mean(0)
         return v
 
 
@@ -196,15 +206,17 @@ class VMI_Inner_CommonWeakness(AdversarialInputAttacker):
         del self.original
         return patch
 
-    def calculate_v(self, x: torch.tensor, y: torch.tensor, model: nn.Module, N=20, beta=1.5):
-        v = torch.zeros_like(x)
+    def calculate_v(self, x: torch.tensor, y: torch.tensor, model: nn.Module, N=20, beta=0.01):
+        B, C, H, D = x.shape
+        x = x.reshape(1, B, C, H, D)
+        x = x.repeat(N, 1, 1, 1, 1)
         ranges = beta * self.epsilon
-        for _ in range(N):
-            now = x + (torch.rand_like(x) - 0.5) * 2 * ranges
-            now.requires_grad = True
-            logit = model(now.to(model.device)).to(now.device)
-            loss = self.criterion(logit, y)
-            loss.backward()
-            v += now.grad
-        v /= N
+        now = x + (torch.rand_like(x) - 0.5) * 2 * ranges
+        now = now.view(N*B, C, H, D)
+        now.requires_grad = True
+        logit = model(now.to(model.device)).to(now.device)
+        loss = self.criterion(logit, y.repeat(N))
+        loss.backward()
+        v = now.grad.view(N, B, C, H, D)
+        v = v.mean(0)
         return v

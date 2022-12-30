@@ -6,6 +6,8 @@ from .utils import cosine_similarity
 from torch import nn
 import random
 from torchvision import transforms
+import numpy as np
+from scipy import stats as st
 
 
 class MI_CosineSimilarityEncourager(AdversarialInputAttacker):
@@ -182,6 +184,7 @@ class MI_CommonWeakness(AdversarialInputAttacker):
                  reverse_step_size=16 / 255 / 15,
                  inner_step_size: float = 250,
                  DI=False,
+                 TI=False,
                  ):
         self.random_start = random_start
         self.epsilon = epsilon
@@ -195,12 +198,16 @@ class MI_CommonWeakness(AdversarialInputAttacker):
         super(MI_CommonWeakness, self).__init__(model)
         self.inner_step_size = inner_step_size
         self.DI = DI
+        self.TI = TI
         if DI:
             self.aug_policy = transforms.Compose([
                 transforms.RandomCrop((int(224 * 0.9), int(224 * 0.9)), padding=224 - int(224 * 0.9)),
             ])
         else:
             self.aug_policy = nn.Identity()
+        if TI:
+            self.ti = self.gkern().to(self.device)
+            self.ti.requires_grad_(False)
 
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
@@ -245,6 +252,8 @@ class MI_CommonWeakness(AdversarialInputAttacker):
                 self.grad_record.append(grad)
                 x.requires_grad = False
                 # update
+                if self.TI:
+                    grad = self.ti(grad)
                 if self.targerted_attack:
                     inner_momentum = self.mu * inner_momentum - grad / torch.norm(grad.reshape(N, -1), p=2, dim=1).view(
                         N, 1, 1, 1)
@@ -293,3 +302,16 @@ class MI_CommonWeakness(AdversarialInputAttacker):
         del self.grad_record
         del self.original
         return patch
+
+    @staticmethod
+    def gkern(kernlen=15, nsig=3):
+        """Returns a 2D Gaussian kernel array."""
+        x = np.linspace(-nsig, nsig, kernlen)
+        kern1d = st.norm.pdf(x)
+        kernel_raw = np.outer(kern1d, kern1d)
+        kernel = kernel_raw / kernel_raw.sum()
+        kernel = torch.tensor(kernel, dtype=torch.float)
+        conv = nn.Conv2d(3, 3, kernel_size=kernlen, stride=1, padding=kernlen // 2, bias=False, groups=3)
+        kernel = kernel.repeat(3, 1, 1).view(3, 1, kernlen, kernlen)
+        conv.weight.data = kernel
+        return conv
