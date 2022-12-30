@@ -68,7 +68,7 @@ def test_transfer_attack_acc_and_cosine_similarity(attacker: AdversarialInputAtt
         train_grads, test_grads = [], []
         x.requires_grad = True
         for m in train_models:
-            loss: torch.tensor = criterion(m(x.to(m.device)), y)
+            loss: torch.tensor = criterion(m(x.to(m.device)), y.to(m.device))
             loss.backward()
             train_grads.append(x.grad)
             x.grad = None

@@ -8,6 +8,7 @@ class AdversarialInputAttacker():
         self.models = model
         self.init()
         self.model_distribute()
+        self.device = torch.device('cuda')
 
     @abstractmethod
     def attack(self, *args, **kwargs):
