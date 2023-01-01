@@ -18,14 +18,14 @@ def test_transfer_attack_acc(attacker: Callable, loader: DataLoader,
     for x, y in tqdm(loader):
         x = x.to(device)
         y = y.to(device)
-        ori_x = x.clone()
+        # ori_x = x.clone()
         x = attacker(x, y)
         # temp = to_img(x[0])
-        # temp.save(f'./what/adv_{count}.png')
+        # temp.save(f'./what/mi/4/adv_{count}.png')
         # temp = to_img(ori_x[0])
-        # temp.save(f'./what/ori_{count}.png')
+        # temp.save(f'./what/mi/4/ori_{count}.png')
         # temp = to_img(x[0]-ori_x[0])
-        # temp.save(f'./what/perturb_{count}.png')
+        # temp.save(f'./what/mi/4/perturb_{count}.png')
         # count += 1
         with torch.no_grad():
             denominator += x.shape[0]
@@ -92,3 +92,15 @@ def test_transfer_attack_acc_and_cosine_similarity(attacker: AdversarialInputAtt
     print('the cosine similarity is ', cosine_similarities)
     print('-' * 100)
     return transfer_accs, cosine_similarities
+
+
+def test_autoattack_acc(model: nn.Module, loader: DataLoader):
+    from autoattack import AutoAttack
+    adversary = AutoAttack(model, eps=8/255)
+    xs, ys = [], []
+    for x, y in tqdm(loader):
+        xs.append(x)
+        ys.append(y)
+    x = torch.concat(xs, dim=0)
+    y = torch.concat(ys, dim=0)
+    adversary.run_standard_evaluation(x, y)
