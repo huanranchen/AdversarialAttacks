@@ -1,3 +1,4 @@
 from .Transformations import BitDepthReduction, Randomization, JPEGCompression
 from .NeuralRepresentationPurifier import NeuralRepresentationPurifier
 from .RandomizedSmoothing import randomized_smoothing_resnet50
+from .DiffPure import get_diffpure_model

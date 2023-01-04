@@ -237,7 +237,7 @@ class MI_CommonWeakness(AdversarialInputAttacker):
                 grad = self.ti(grad)
             x.requires_grad = False
             if self.targerted_attack:
-                pass
+                x += self.reverse_step_size * grad.sign()
             else:
                 x -= self.reverse_step_size * grad.sign()
                 # x -= self.reverse_step_size * grad / torch.norm(grad.reshape(N, -1), p=2, dim=1).view(N, 1, 1, 1)

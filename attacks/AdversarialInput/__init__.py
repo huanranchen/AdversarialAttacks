@@ -5,3 +5,4 @@ from .FGSM import *
 from .BIM import *
 from .VMI import *
 from .TI import *
+from .SGD import *

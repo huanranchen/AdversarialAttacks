@@ -87,8 +87,6 @@ def parse_args_and_config():
     '''
         CUDA_VISIBLE_DEVICES=0,1,2,3 python eval_sde_adv.py --exp ./exp_results --config imagenet.yml \
           --t $t \
-          --diffusion_type sde \
-          --eot_iter 20
     :return:
     '''
     parser = argparse.ArgumentParser(description=globals()['__doc__'])
@@ -155,7 +153,7 @@ def parse_args_and_config():
     return args, new_config
 
 
-def get_model(base_model: nn.Module):
+def get_diffpure_model(base_model: nn.Module):
     args, config = parse_args_and_config()
     model = SDE_Adv_Model(base_model, args, config)
     return model
