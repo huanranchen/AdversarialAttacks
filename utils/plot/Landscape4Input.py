@@ -41,9 +41,16 @@ class Landscape4Input():
         self.mesh_x = x
         self.mesh_y = y
 
+    def assign_unit_vector(self, x_unit_vector, y_unit_vector=None):
+        self.x_unit_vector = x_unit_vector
+        self.y_unit_vector = y_unit_vector
+
     @torch.no_grad()
     def draw(self, axes=None):
-        self._find_direction()
+        if hasattr(self, 'x_unit_vector') and self.x_unit_vector is not None:
+            pass
+        else:
+            self._find_direction()
         z = self._compute_for_draw()
         if axes is None and self.mode == '3D':
             axes = plt.axes(projection='3d')
@@ -52,9 +59,9 @@ class Landscape4Input():
     def _find_direction(self):
         self.x_unit_vector = torch.randn(self.input.shape, device=self.device)
         self.y_unit_vector = torch.randn(self.input.shape, device=self.device)
-        self.x_unit_vector /= torch.norm(self.x_unit_vector, p=2)
-        self.y_unit_vector /= torch.norm(self.y_unit_vector, p=2)  # make sure the l 2 norm is 0
-        # # keep perpendicular
+        self.x_unit_vector /= torch.norm(self.x_unit_vector, p=float('inf'))
+        self.y_unit_vector /= torch.norm(self.y_unit_vector, p=float('inf'))  # make sure the l 2 norm is 0
+        # keep perpendicular
         # if torch.abs(self.x0.reshape(-1) @ self.y0.reshape(-1)) >= 0.1:
         #     self._find_direction()
 
@@ -63,7 +70,7 @@ class Landscape4Input():
         if self.mode == '2D':
             self.mesh_x = self.mesh_x[0, :]
             for i in tqdm(range(self.mesh_x.shape[0])):
-                with suppress_stdout_stderr():
+                # with suppress_stdout_stderr():
                     now_x = self.mesh_x[i]
                     x = self.input + self.x_unit_vector * now_x
                     x = self.project(x)
@@ -71,7 +78,7 @@ class Landscape4Input():
                     result.append(loss)
         else:
             for i in tqdm(range(self.mesh_x.shape[0])):
-                with suppress_stdout_stderr():
+                # with suppress_stdout_stderr():
                     for j in range(self.mesh_x.shape[1]):
                         now_x = self.mesh_x[i, j]
                         now_y = self.mesh_y[i, j]
@@ -96,7 +103,7 @@ class Landscape4Input():
         if self.mode == '2D':
             plt.plot(mesh_x, mesh_z)
 
-        plt.show()
+        # plt.show()
         # plt.close()
         # plt.savefig(self.get_datetime_str() + ".png")
 
