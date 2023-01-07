@@ -195,7 +195,7 @@ class RevGuidedDiffusion(torch.nn.Module):
         print(f't: {args.t}, rand_t: {args.rand_t}, t_delta: {args.t_delta}')
         print(f'use_bm: {args.use_bm}')
 
-    def image_editing_sample(self, img, bs_id=0, tag=None):
+    def image_editing_sample(self, img, bs_id=0, tag=None, diffusion_iter_time=None):
         assert isinstance(img, torch.Tensor)
         batch_size = img.shape[0]
         state_size = int(np.prod(img.shape[1:]))  # c*h*w
@@ -213,9 +213,13 @@ class RevGuidedDiffusion(torch.nn.Module):
             tvu.save_image((x0 + 1) * 0.5, os.path.join(out_dir, f'original_input.png'))
 
         xs = []
+        ori_t = self.args.t
+        if diffusion_iter_time is not None:
+            self.args.t = diffusion_iter_time
         for it in range(self.args.sample_step):
 
             e = torch.randn_like(x0).to(self.device)
+            e.requires_grad = False
             total_noise_levels = self.args.t
             if self.args.rand_t:
                 total_noise_levels = self.args.t + np.random.randint(-self.args.t_delta, self.args.t_delta)
@@ -232,11 +236,12 @@ class RevGuidedDiffusion(torch.nn.Module):
             ts = torch.linspace(t0, t1, t_size).to(self.device)
 
             x_ = x.view(batch_size, -1)  # (batch_size, state_size)
+            self.rev_vpsde.requires_grad_(False)
             if self.args.use_bm:
                 bm = torchsde.BrownianInterval(t0=t0, t1=t1, size=(batch_size, state_size), device=self.device)
-                xs_ = torchsde.sdeint_adjoint(self.rev_vpsde, x_, ts, method='euler', bm=bm)
+                xs_ = torchsde.sdeint(self.rev_vpsde, x_, ts, method='euler', bm=bm)
             else:
-                xs_ = torchsde.sdeint_adjoint(self.rev_vpsde, x_, ts, method='euler')
+                xs_ = torchsde.sdeint(self.rev_vpsde, x_, ts, method='euler')
             x0 = xs_[-1].view(x.shape)  # (batch_size, c, h, w)
 
             if bs_id < 2:
@@ -245,4 +250,8 @@ class RevGuidedDiffusion(torch.nn.Module):
 
             xs.append(x0)
 
+        self.args.t = ori_t
         return torch.cat(xs, dim=0)
+
+    def __call__(self, *args, **kwargs):
+        return self.image_editing_sample(*args, **kwargs)

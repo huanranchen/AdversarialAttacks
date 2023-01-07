@@ -38,11 +38,12 @@ def get_NIPS17_loader(batch_size=64,
                       num_workers=8,
                       pin_memory=True,
                       download=False,
+                      shuffle=False,
                       **kwargs,
                       ):
     if download:
         os.system(__kaggle_link__)
     set = NIPS17(**kwargs)
     loader = DataLoader(set, batch_size=batch_size, num_workers=num_workers, pin_memory=pin_memory,
-                        shuffle=False)
+                        shuffle=shuffle)
     return loader
