@@ -1,2 +1,2 @@
-from .eval_sde_adv import get_diffpure_imagenet
+from .eval_sde_adv import DiffusionPureImageNet
 from .runners.diffpure_sde import RevGuidedDiffusion

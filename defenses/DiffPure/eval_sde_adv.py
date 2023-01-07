@@ -26,6 +26,8 @@ from .utils import str2bool, get_accuracy, get_image_classifier, load_data, Logg
 # from .runners.diffpure_ddpm import Diffusion
 # from .runners.diffpure_guided import GuidedDiffusion
 from .runners.diffpure_sde import RevGuidedDiffusion
+
+
 # from .runners.diffpure_ode import OdeGuidedDiffusion
 # from .runners.diffpure_ldsde import LDGuidedDiffusion
 
@@ -208,7 +210,8 @@ def eval_stadv(args, config, model, x_val, y_val, adv_batch_size, log_dir):
 
 
 def robustness_eval(args, config):
-    middle_name = '_'.join([args.diffusion_type, args.attack_version]) if args.attack_version in ['stadv', 'standard', 'rand'] \
+    middle_name = '_'.join([args.diffusion_type, args.attack_version]) if args.attack_version in ['stadv', 'standard',
+                                                                                                  'rand'] \
         else '_'.join([args.diffusion_type, args.attack_version, args.attack_type])
     log_dir = os.path.join(args.image_folder, args.classifier_name, middle_name,
                            'seed' + str(args.seed), 'data' + str(args.data_seed))
@@ -324,10 +327,16 @@ def parse_args_and_config():
     return args, new_config
 
 
-# if __name__ == '__main__':
+class DiffusionPureImageNet(nn.Module):
+    def __init__(self):
+        super(DiffusionPureImageNet, self).__init__()
+        args, config = parse_args_and_config()
+        # os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
+        self.model = robustness_eval(args, config)
+        self.model = self.model.runner
 
-def get_diffpure_imagenet():
-    args, config = parse_args_and_config()
-    # os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
-    return robustness_eval(args, config)
-
+    def forward(self, x, *args, **kwargs):
+        x = (x - 0.5) * 2
+        x = self.model(x, *args, **kwargs)
+        x = (x + 1) * 0.5
+        return x
