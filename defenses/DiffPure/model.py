@@ -153,7 +153,3 @@ def parse_args_and_config():
     return args, new_config
 
 
-def get_diffpure_model(base_model: nn.Module):
-    args, config = parse_args_and_config()
-    model = SDE_Adv_Model(base_model, args, config)
-    return model

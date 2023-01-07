@@ -6,6 +6,7 @@ import torch
 from utils import Landscape4Input
 from torch.nn import functional as F
 from matplotlib import pyplot as plt
-from defenses import get_diffpure_model
+from defenses import get_diffpure_imagenet
 
-model = get_diffpure_model()
+model = get_diffpure_imagenet()
+diffusion = model.runner

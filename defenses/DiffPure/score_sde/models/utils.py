@@ -17,7 +17,7 @@
 """
 
 import torch
-from score_sde import sde_lib
+from ...score_sde import sde_lib
 import numpy as np
 
 _MODELS = {}

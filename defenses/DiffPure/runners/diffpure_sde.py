@@ -13,11 +13,11 @@ import torch
 import torchvision.utils as tvu
 import torchsde
 
-from guided_diffusion.script_util import create_model_and_diffusion, model_and_diffusion_defaults
-from score_sde.losses import get_optimizer
-from score_sde.models import utils as mutils
-from score_sde.models.ema import ExponentialMovingAverage
-from score_sde import sde_lib
+from ..guided_diffusion.script_util import create_model_and_diffusion, model_and_diffusion_defaults
+from ..score_sde.losses import get_optimizer
+from ..score_sde.models import utils as mutils
+from ..score_sde.models.ema import ExponentialMovingAverage
+from ..score_sde import sde_lib
 
 
 def _extract_into_tensor(arr_or_func, timesteps, broadcast_shape):
@@ -164,7 +164,8 @@ class RevGuidedDiffusion(torch.nn.Module):
             model_config.update(vars(self.config.model))
             print(f'model_config: {model_config}')
             model, _ = create_model_and_diffusion(**model_config)
-            model.load_state_dict(torch.load(f'{model_dir}/256x256_diffusion_uncond.pt', map_location='cpu'))
+            model.load_state_dict(torch.load(f'./resources/checkpoints/'
+                                             f'DiffPure/256x256_diffusion_uncond.pt', map_location='cpu'))
 
             if model_config['use_fp16']:
                 model.convert_to_fp16()
