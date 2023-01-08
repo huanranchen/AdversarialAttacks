@@ -332,8 +332,9 @@ class DiffusionPureImageNet(nn.Module):
         super(DiffusionPureImageNet, self).__init__()
         args, config = parse_args_and_config()
         # os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
-        self.model = robustness_eval(args, config)
-        self.model = self.model.runner
+        model = robustness_eval(args, config)
+        self.model = model.runner
+        del model
 
     def forward(self, x, *args, **kwargs):
         x = (x - 0.5) * 2

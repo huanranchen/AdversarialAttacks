@@ -7,9 +7,9 @@ from .AdversarialInputBase import AdversarialInputAttacker
 
 class DiffusionAttacker(AdversarialInputAttacker):
     def __init__(self, model: List[nn.Module],
-                 epsilon: float = 32 / 255,
-                 total_step: int = 10, random_start: bool = False,
-                 step_size: float = 32 / 255 / 5,
+                 epsilon: float = 16 / 255,
+                 total_step: int = 30, random_start: bool = False,
+                 step_size: float = 16 / 255 / 5,
                  criterion: Callable = nn.MSELoss(),
                  targeted_attack=True,
                  mu: float = 0,
