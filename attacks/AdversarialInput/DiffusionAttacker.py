@@ -45,7 +45,6 @@ class DiffusionAttacker(AdversarialInputAttacker):
             loss = self.criterion(out, target)
             loss.backward()
             grad = x.grad
-            print(grad)
             x.requires_grad = False
             # update
             if self.targerted_attack:

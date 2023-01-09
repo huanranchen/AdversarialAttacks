@@ -123,10 +123,6 @@ def test_transfer_attack_acc_with_batch(get_attacker: Callable,
     batch_y = batch_y.to(device)
     xs = list(torch.split(batch_x, batch_size, dim=0))
     ys = list(torch.split(batch_y, batch_size, dim=0))
-    print('-' * 100)
-    print(device)
-    print('-' * 100)
-    print(attacker)
     attacker.to(device)
 
     for model in target_models:
@@ -163,7 +159,7 @@ def test_transfer_attack_acc_distributed(get_attacker: Callable,
         xs.append(x)
         ys.append(y)
     xs, ys = torch.cat(xs, dim=0), torch.cat(ys, dim=0)
-    xs, ys = list(torch.split(xs, num_gpu, dim=0)), list(torch.split(ys, num_gpu, dim=0))
+    xs, ys = list(torch.split(xs, xs.shape[0] // num_gpu, dim=0)), list(torch.split(ys, ys.shape[0] // num_gpu, dim=0))
     pool = multiprocessing.Pool(processes=num_gpu)
     results = [pool.apply_async(func=test_transfer_attack_acc_with_batch,
                                 args=(

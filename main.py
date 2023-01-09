@@ -2,6 +2,7 @@ from data import get_NIPS17_loader
 from attacks import BIM, FGSM, PGD, MI_RandomWeight, DiffusionAttacker, \
     MI_FGSM, MI_CosineSimilarityEncourager, MI_SAM, MI_CommonWeakness, SGD
 from models import *
+classifier = BaseNormModel(resnet50(pretrained=True)).cuda()
 import torch
 from utils import Landscape4Input
 from torch.nn import functional as F
@@ -12,12 +13,12 @@ from PIL import Image
 from tester import test_transfer_attack_acc, test_transfer_attack_acc_distributed
 
 
-loader = get_NIPS17_loader(batch_size=1, shuffle=True, num_workers=0)
+
+loader = get_NIPS17_loader(batch_size=16, shuffle=True, num_workers=0)
 to_img = transforms.ToPILImage()
 
-model = DiffusionPureImageNet().to(torch.device('cpu'))
-diffusion = model
-classifier = BaseNormModel(resnet50(pretrained=True)).to(torch.device('cpu'))
+model = DiffusionPureImageNet()
+diffusion = model.cuda()
 # attacker = DiffusionAttacker([diffusion])
 attacker = MI_FGSM([classifier])
 
@@ -59,5 +60,6 @@ def get_target_model():
 
 
 if __name__ == '__main__':
-    torch.multiprocessing.set_start_method("spawn")
-    test_transfer_attack_acc_distributed(get_attacker, loader, get_target_model, num_gpu=4)
+    # torch.multiprocessing.set_start_method("spawn")
+    test_transfer_attack_acc(attacker, loader, [TargetModel()])
+   #  test_transfer_attack_acc_distributed(get_attacker, loader, get_target_model, num_gpu=4)
