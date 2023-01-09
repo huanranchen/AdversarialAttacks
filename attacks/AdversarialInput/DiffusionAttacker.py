@@ -40,7 +40,7 @@ class DiffusionAttacker(AdversarialInputAttacker):
             x.requires_grad = True
             out = 0
             for model in self.models:
-                out += model(x.to(model.device), diffusion_iter_time=1, tag='sde_adv').to(x.device)
+                out += model(x, diffusion_iter_time=1, tag='sde_adv').to(x.device)
             out /= self.n
             loss = self.criterion(out, target)
             loss.backward()

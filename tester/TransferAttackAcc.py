@@ -140,7 +140,7 @@ def test_transfer_attack_acc_with_batch(get_attacker: Callable,
     # print
     for i, model in enumerate(target_models):
         print('-' * 100)
-        print(model.__class__, model.model.__class__, transfer_accs[i])
+        print(model.__class__, transfer_accs[i])
         print('-' * 100)
     return transfer_accs
 
