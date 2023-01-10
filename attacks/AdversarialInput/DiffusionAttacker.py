@@ -3,13 +3,14 @@ from attacks.utils import *
 from torch import nn
 from typing import Callable, List
 from .AdversarialInputBase import AdversarialInputAttacker
+from torchvision import transforms
 
 
 class DiffusionAttacker(AdversarialInputAttacker):
     def __init__(self, model: List[nn.Module],
-                 epsilon: float = 16 / 255,
+                 epsilon: float = 4 / 255,
                  total_step: int = 30, random_start: bool = False,
-                 step_size: float = 16 / 255 / 5,
+                 step_size: float = 4 / 255 / 5,
                  criterion: Callable = nn.MSELoss(),
                  targeted_attack=True,
                  mu: float = 0,
@@ -22,6 +23,8 @@ class DiffusionAttacker(AdversarialInputAttacker):
         self.targerted_attack = targeted_attack
         self.mu = mu
         super(DiffusionAttacker, self).__init__(model)
+        self.to_img = transforms.ToPILImage()
+        self.record_count = 0
 
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
@@ -42,6 +45,7 @@ class DiffusionAttacker(AdversarialInputAttacker):
             for model in self.models:
                 out += model(x, diffusion_iter_time=1, tag='sde_adv').to(x.device)
             out /= self.n
+            self.record(out, keyword='after')
             loss = self.criterion(out, target)
             loss.backward()
             grad = x.grad
@@ -57,3 +61,8 @@ class DiffusionAttacker(AdversarialInputAttacker):
             x = clamp(x, original_x - self.epsilon, original_x + self.epsilon)
 
         return x
+
+    def record(self, x, keyword='before'):
+        x = self.to_img(x[0])
+        x.save(f'{keyword}{self.record_count}.png')
+        self.record_count += 1

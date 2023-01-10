@@ -22,7 +22,7 @@ attacker = DiffusionAttacker([diffusion])
 # attacker = MI_FGSM([classifier])
 
 for x, y in loader:
-    x, y = x[8].cuda().unsqueeze(0), y[8].cuda().unsqueeze(0)
+    x, y = x[118].cuda().unsqueeze(0), y[118].cuda().unsqueeze(0)
     original_x = x.clone()
     # making adv_x
     adv_x = x.clone()
@@ -30,6 +30,7 @@ for x, y in loader:
     adv_img: Image.Image = to_img(adv_x.squeeze())
     adv_img.save('adv.png')
     delta = torch.abs(adv_x - original_x)
+    print(f'difference is {torch.sum(delta)}')
     delta: Image.Image = to_img(delta.squeeze())
     delta.save('adv-x.png')
     # making purified image

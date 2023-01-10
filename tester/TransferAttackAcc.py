@@ -40,7 +40,7 @@ def test_transfer_attack_acc(attacker: Callable, loader: DataLoader,
     # print
     for i, model in enumerate(target_models):
         print('-' * 100)
-        print(model.__class__, model.model.__class__, transfer_accs[i])
+        print(model.__class__,  transfer_accs[i])
         print('-' * 100)
     return transfer_accs
 
@@ -87,7 +87,7 @@ def test_transfer_attack_acc_and_cosine_similarity(attacker: AdversarialInputAtt
     # print
     for i, model in enumerate(target_models):
         print('-' * 100)
-        print(model.__class__, model.model.__class__, transfer_accs[i])
+        print(model.__class__,  transfer_accs[i])
         print('-' * 100)
     cosine_similarities = sum(cosine_similarities) / len(cosine_similarities)
     print('-' * 100)

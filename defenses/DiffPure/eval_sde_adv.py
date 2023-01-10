@@ -262,7 +262,7 @@ def parse_args_and_config():
     parser.add_argument('-i', '--image_folder', type=str, default='images', help="The folder name of samples")
     parser.add_argument('--ni', action='store_true', help="No interaction. Suitable for Slurm Job launcher")
     parser.add_argument('--sample_step', type=int, default=1, help='Total sampling steps')
-    parser.add_argument('--t', type=int, default=400, help='Sampling noise scale')
+    parser.add_argument('--t', type=int, default=150, help='Sampling noise scale')
     parser.add_argument('--t_delta', type=int, default=15, help='Perturbation range of sampling noise scale')
     parser.add_argument('--rand_t', type=str2bool, default=False, help='Decide if randomize sampling noise scale')
     parser.add_argument('--diffusion_type', type=str, default='sde', help='[ddpm, sde]')

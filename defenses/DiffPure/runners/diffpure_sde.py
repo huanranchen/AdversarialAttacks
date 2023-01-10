@@ -73,7 +73,7 @@ class RevVPSDE(torch.nn.Module):
         self.sqrt_alphas_cumprod = torch.sqrt(self.alphas_cumprod)
         self.sqrt_1m_alphas_cumprod = torch.sqrt(1. - self.alphas_cumprod)
 
-        self.alphas_cumprod_cont = lambda t: torch.exp(-0.5 * (beta_max - beta_min) * t**2 - beta_min * t)
+        self.alphas_cumprod_cont = lambda t: torch.exp(-0.5 * (beta_max - beta_min) * t ** 2 - beta_min * t)
         self.sqrt_1m_alphas_cumprod_neg_recip_cont = lambda t: -1. / torch.sqrt(1. - self.alphas_cumprod_cont(t))
 
         self.noise_type = "diagonal"
@@ -143,7 +143,7 @@ class RevVPSDE(torch.nn.Module):
         """
         t = t.expand(x.shape[0])  # (batch_size, )
         diffusion = self.rvpsde_fn(1 - t, x, return_type='diffusion')
-        assert diffusion.shape == (x.shape[0], )
+        assert diffusion.shape == (x.shape[0],)
         return diffusion[:, None].expand(x.shape)
 
 
@@ -194,7 +194,7 @@ class RevGuidedDiffusion(torch.nn.Module):
 
         print(f't: {args.t}, rand_t: {args.rand_t}, t_delta: {args.t_delta}')
         print(f'use_bm: {args.use_bm}')
-
+    #
     def image_editing_sample(self, img, bs_id=0, tag=None, diffusion_iter_time=None):
         assert isinstance(img, torch.Tensor)
         batch_size = img.shape[0]
@@ -213,14 +213,11 @@ class RevGuidedDiffusion(torch.nn.Module):
             tvu.save_image((x0 + 1) * 0.5, os.path.join(out_dir, f'original_input.png'))
 
         xs = []
-        ori_t = self.args.t
-        if diffusion_iter_time is not None:
-            self.args.t = diffusion_iter_time
         for it in range(self.args.sample_step):
 
             e = torch.randn_like(x0).to(self.device)
             e.requires_grad = False
-            total_noise_levels = self.args.t
+            total_noise_levels = self.args.t  # noise level是啥意思？迭代次数？
             if self.args.rand_t:
                 total_noise_levels = self.args.t + np.random.randint(-self.args.t_delta, self.args.t_delta)
                 print(f'total_noise_levels: {total_noise_levels}')
@@ -231,7 +228,11 @@ class RevGuidedDiffusion(torch.nn.Module):
                 tvu.save_image((x + 1) * 0.5, os.path.join(out_dir, f'init_{it}.png'))
 
             epsilon_dt0, epsilon_dt1 = 0, 1e-5
-            t0, t1 = 1 - self.args.t * 1. / 1000 + epsilon_dt0, 1 - epsilon_dt1
+            t0 = 1 - self.args.t * 1. / 1000 + epsilon_dt0
+            if diffusion_iter_time is None:
+                t1 = 1 - epsilon_dt1
+            else:
+                t1 = t0 + diffusion_iter_time * 1. / 1000 - epsilon_dt1
             t_size = 2
             ts = torch.linspace(t0, t1, t_size).to(self.device)
 
@@ -250,8 +251,65 @@ class RevGuidedDiffusion(torch.nn.Module):
 
             xs.append(x0)
 
-        self.args.t = ori_t
         return torch.cat(xs, dim=0)
+
+    # def image_editing_sample(self, img, bs_id=0, tag=None, diffusion_iter_time=None):
+    #     assert isinstance(img, torch.Tensor)
+    #     batch_size = img.shape[0]
+    #     state_size = int(np.prod(img.shape[1:]))  # c*h*w
+    #
+    #     if tag is None:
+    #         tag = 'rnd' + str(random.randint(0, 10000))
+    #     out_dir = os.path.join(self.args.log_dir, 'bs' + str(bs_id) + '_' + tag)
+    #
+    #     assert img.ndim == 4, img.ndim
+    #     img = img.to(self.device)
+    #     x0 = img
+    #
+    #     if bs_id < 2:
+    #         os.makedirs(out_dir, exist_ok=True)
+    #         tvu.save_image((x0 + 1) * 0.5, os.path.join(out_dir, f'original_input.png'))
+    #
+    #     xs = []
+    #     ori_t = self.args.t
+    #     if diffusion_iter_time is not None:
+    #         self.args.t = diffusion_iter_time
+    #     for it in range(self.args.sample_step):
+    #
+    #         e = torch.randn_like(x0).to(self.device)
+    #         e.requires_grad = False
+    #         total_noise_levels = self.args.t  # noise level是啥意思？迭代次数？
+    #         if self.args.rand_t:
+    #             total_noise_levels = self.args.t + np.random.randint(-self.args.t_delta, self.args.t_delta)
+    #             print(f'total_noise_levels: {total_noise_levels}')
+    #         a = (1 - self.betas).cumprod(dim=0).to(self.device)
+    #         x = x0 * a[total_noise_levels - 1].sqrt() + e * (1.0 - a[total_noise_levels - 1]).sqrt()
+    #
+    #         if bs_id < 2:
+    #             tvu.save_image((x + 1) * 0.5, os.path.join(out_dir, f'init_{it}.png'))
+    #
+    #         epsilon_dt0, epsilon_dt1 = 0, 1e-5
+    #         t0, t1 = 1 - self.args.t * 1. / 1000 + epsilon_dt0, 1 - epsilon_dt1
+    #         t_size = 2
+    #         ts = torch.linspace(t0, t1, t_size).to(self.device)
+    #
+    #         x_ = x.view(batch_size, -1)  # (batch_size, state_size)
+    #         self.rev_vpsde.requires_grad_(False)
+    #         if self.args.use_bm:
+    #             bm = torchsde.BrownianInterval(t0=t0, t1=t1, size=(batch_size, state_size), device=self.device)
+    #             xs_ = torchsde.sdeint(self.rev_vpsde, x_, ts, method='euler', bm=bm)
+    #         else:
+    #             xs_ = torchsde.sdeint(self.rev_vpsde, x_, ts, method='euler')
+    #         x0 = xs_[-1].view(x.shape)  # (batch_size, c, h, w)
+    #
+    #         if bs_id < 2:
+    #             torch.save(x0, os.path.join(out_dir, f'samples_{it}.pth'))
+    #             tvu.save_image((x0 + 1) * 0.5, os.path.join(out_dir, f'samples_{it}.png'))
+    #
+    #         xs.append(x0)
+    #
+    #     self.args.t = ori_t
+    #     return torch.cat(xs, dim=0)
 
     def __call__(self, *args, **kwargs):
         return self.image_editing_sample(*args, **kwargs)
