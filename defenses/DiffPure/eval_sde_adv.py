@@ -38,7 +38,7 @@ class SDE_Adv_Model(nn.Module):
         self.args = args
 
         # image classifier
-        self.classifier = get_image_classifier(args.classifier_name).to(config.device)
+        # self.classifier = get_image_classifier(args.classifier_name).to(config.device)
 
         # diffusion model
         print(f'diffusion_type: {args.diffusion_type}')

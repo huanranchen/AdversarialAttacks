@@ -1,4 +1,3 @@
-from kornia import augmentation as KA
 import torch
 from attacks.utils import *
 from torch import nn

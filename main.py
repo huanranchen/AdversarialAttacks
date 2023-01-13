@@ -1,6 +1,6 @@
 from data import get_NIPS17_loader
 from attacks import BIM, FGSM, PGD, MI_RandomWeight, DiffusionAttacker, \
-    MI_FGSM, MI_CosineSimilarityEncourager, MI_SAM, MI_CommonWeakness, SGD
+    MI_FGSM, MI_CosineSimilarityEncourager, MI_SAM, MI_CommonWeakness, SGD, DI_MI_FGSM
 from models import *
 
 classifier = BaseNormModel(resnet50(pretrained=True)).cuda()
@@ -19,10 +19,10 @@ to_img = transforms.ToPILImage()
 model = DiffusionPureImageNet()
 diffusion = model.cuda()
 attacker = DiffusionAttacker([diffusion])
-# attacker = MI_FGSM([classifier])
+# attacker = DI_MI_FGSM([classifier], epsilon=4/255, total_step=300)
 
 for x, y in loader:
-    x, y = x[118].cuda().unsqueeze(0), y[118].cuda().unsqueeze(0)
+    x, y = x[11].cuda().unsqueeze(0), y[11].cuda().unsqueeze(0)
     original_x = x.clone()
     # making adv_x
     adv_x = x.clone()
@@ -37,6 +37,8 @@ for x, y in loader:
     purified_x = diffusion(adv_x)
     purified_img: Image.Image = to_img(purified_x.squeeze())
     purified_img.save('purified.png')
+    origin_img: Image.Image = to_img(original_x.squeeze())
+    origin_img.save('origin.png')
     print(y, torch.max(classifier(adv_x), dim=1)[1], torch.max(classifier(purified_x), dim=1)[1])
     break
 
@@ -53,10 +55,6 @@ class TargetModel(torch.nn.Module):
         return x
 
 # if __name__ == '__main__':
-#     # torch.multiprocessing.set_start_method("spawn")
 #     result = test_transfer_attack_acc(attacker, loader, [TargetModel()])
 #    #  test_transfer_attack_acc_distributed(get_attacker, loader, get_target_model, num_gpu=4)
-#     import json
-#     result = {'r': result}
-#     with open('./mifgsmattacker.json', 'w', encoding='utf-8') as file:
-#         file.write(json.dumps(result))
+
