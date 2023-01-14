@@ -6,5 +6,5 @@ from .BIM import *
 from .VMI import *
 from .TI import *
 from .SGD import *
-from .DiffusionAttacker import DiffusionAttacker
+from .DiffusionAttacker import DiffusionAttacker, DiffusionPatchAttacker
 from .DI import DI_MI_FGSM
