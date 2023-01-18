@@ -18,7 +18,7 @@ class DI_MI_FGSM(AdversarialInputAttacker):
                  epsilon: float = 16 / 255,
                  total_step: int = 10,
                  random_start: bool = False,
-                 step_size: float = 16 / 255 / 5,
+                 step_size: float = 16 / 255 / 10,
                  criterion: Callable = nn.CrossEntropyLoss(),
                  targeted_attack=False,
                  mu: float = 1,
@@ -32,7 +32,7 @@ class DI_MI_FGSM(AdversarialInputAttacker):
         self.targerted_attack = targeted_attack
         self.mu = mu
         self.aug_policy = transforms.Compose([
-            transforms.RandomCrop((int(224 * 0.9), int(224 * 0.9)), padding=224 - int(224 * 0.9)),
+            transforms.RandomCrop((224, 224), padding=224-int(224*0.9)),
         ])
         self.init()
 

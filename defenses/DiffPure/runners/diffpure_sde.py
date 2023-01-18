@@ -240,9 +240,9 @@ class RevGuidedDiffusion(torch.nn.Module):
             self.rev_vpsde.requires_grad_(False)
             if self.args.use_bm:
                 bm = torchsde.BrownianInterval(t0=t0, t1=t1, size=(batch_size, state_size), device=self.device)
-                xs_ = torchsde.sdeint(self.rev_vpsde, x_, ts, method='euler', bm=bm)
+                xs_ = torchsde.sdeint_adjoint(self.rev_vpsde, x_, ts, method='euler', bm=bm)
             else:
-                xs_ = torchsde.sdeint(self.rev_vpsde, x_, ts, method='euler')
+                xs_ = torchsde.sdeint_adjoint(self.rev_vpsde, x_, ts, method='euler')
             x0 = xs_[-1].view(x.shape)  # (batch_size, c, h, w)
 
             if bs_id < 2:
