@@ -40,7 +40,7 @@ def test_transfer_attack_acc(attacker: Callable, loader: DataLoader,
     # print
     for i, model in enumerate(target_models):
         print('-' * 100)
-        print(model.__class__,  transfer_accs[i])
+        print(model.__class__,  model.model.__class__, transfer_accs[i])
         print('-' * 100)
     return transfer_accs
 

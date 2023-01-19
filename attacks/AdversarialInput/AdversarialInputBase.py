@@ -7,7 +7,7 @@ class AdversarialInputAttacker():
     def __init__(self, model: List[torch.nn.Module]):
         self.models = model
         self.init()
-        # self.model_distribute()
+        self.model_distribute()
         self.device = torch.device('cuda')
         self.n = len(self.models)
 
