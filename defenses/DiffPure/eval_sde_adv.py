@@ -314,13 +314,13 @@ def parse_args_and_config():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     logging.info("Using device: {}".format(device))
     new_config.device = device
-
-    # set random seed
-    torch.manual_seed(args.seed)
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(args.seed)
+    #
+    # # set random seed
+    # torch.manual_seed(args.seed)
+    # random.seed(args.seed)
+    # np.random.seed(args.seed)
+    # if torch.cuda.is_available():
+    #     torch.cuda.manual_seed_all(args.seed)
 
     torch.backends.cudnn.benchmark = True
 
