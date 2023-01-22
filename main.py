@@ -59,9 +59,8 @@ def ddpm():
 def ddim():
     x = torch.randn((1, 3, 256, 256), device=device)
     for t in range(999, -1, -1):
-        # sigma = torch.sqrt(1 - alpha[t]) * torch.sqrt(1 - alpha_bar[t - 1]) / torch.sqrt(1 - alpha_bar[t])
+        sigma = torch.sqrt(1 - alpha[t]) * torch.sqrt(1 - alpha_bar[t - 1]) / torch.sqrt(1 - alpha_bar[t])
         # sigma = 0
-        sigma = (1 - alpha_bar[t - 1]) * (1 - 2 * alpha[t] + alpha[t] * alpha_bar[t - 1]) / (1 - alpha[t])
         sigma = torch.sqrt(sigma)
         tensor_t = torch.zeros((x.shape[0]), device=device) + t
         predict = unet(x, tensor_t)[:, :3, :, :]
