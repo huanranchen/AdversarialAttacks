@@ -217,7 +217,7 @@ class RevGuidedDiffusion(torch.nn.Module):
 
             e = torch.randn_like(x0).to(self.device)
             e.requires_grad = False
-            total_noise_levels = self.args.t  # noise level是啥意思？迭代次数？
+            total_noise_levels = self.args.t
             if self.args.rand_t:
                 total_noise_levels = self.args.t + np.random.randint(-self.args.t_delta, self.args.t_delta)
                 print(f'total_noise_levels: {total_noise_levels}')
