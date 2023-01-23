@@ -103,9 +103,9 @@ def test_autoattack_acc(model: nn.Module, loader: DataLoader):
     for x, y in tqdm(loader):
         xs.append(x)
         ys.append(y)
-    x = torch.concat(xs, dim=0)
-    y = torch.concat(ys, dim=0)
-    adversary.run_standard_evaluation(x, y)
+    x = torch.concat(xs, dim=0).cuda()
+    y = torch.concat(ys, dim=0).cuda()
+    adversary.run_standard_evaluation(x, y, bs=8)
 
 
 def test_transfer_attack_acc_with_batch(get_attacker: Callable,

@@ -3,6 +3,8 @@ import torchsde
 from .eval_sde_adv import parse_args_and_config, robustness_eval
 from torch import nn
 from models import resnet50
+from torchvision import transforms
+from .runners.diffpure_sde import RevVPSDE
 
 
 def get_unet():
@@ -36,9 +38,15 @@ class DiffusionSde(nn.Module):
         self.eval().to(self.device).requires_grad_(False)
         self.noise_type = "diagonal"
         self.sde_type = "ito"
+        self.to_img = transforms.ToPILImage()
+        self.i = 0
 
     def convert(self, x):
-        return (x + 1) * 0.5
+        x = (x + 1) * 0.5
+        img = self.to_img(x[0])
+        img.save(f'./what/{self.i}.png')
+        self.i += 1
+        return x
 
     def diffusion_forward(self, x: torch.Tensor, t: int):
         assert len(x.shape) == 2, 'x should be N, D'
@@ -60,13 +68,13 @@ class DiffusionSde(nn.Module):
         return -drift
 
     def f(self, t: float, x):
-        f = self.reverse_diffusion_forward(x, int(t * self.T), return_type='drift')
+        f = self.reverse_diffusion_forward(x, round(float(t) * self.T), return_type='drift')
         assert f.shape == x.shape
         # print('f', torch.sum(f))
         return f
 
     def g(self, t: float, x):
-        g = self.reverse_diffusion_forward(x, int(t * self.T), return_type='diffusion')
+        g = self.reverse_diffusion_forward(x, round(float(t) * self.T), return_type='diffusion')
         # print('g', torch.sum(g))
         return g
 
@@ -74,19 +82,27 @@ class DiffusionSde(nn.Module):
     def sample(self):
         import torchsde
         x = torch.randn((1, 3, 256, 256), device=self.device).view((1, 3 * 256 * 256))
-        ts = torch.tensor([0., 1 - 1e-4], device=self.device)
-        x = torchsde.sdeint_adjoint(self, x, ts, method='euler')
-        x = x.reshape(2, 1, 3, 256, 256)
-        return self.convert(x[1])
+        ts = torch.tensor([0., 1.-1e-4], device=self.device)
+        standard = RevVPSDE(self.unet).cuda().requires_grad_(False).eval()
+        standard.to(self.device)
+        x = torchsde.sdeint(self, x, ts, method='euler')
+        x = x[-1]  # N, 3, 256, 256
+        x = x.reshape(1, 3, 256, 256)
+        return self.convert(x)
 
     def purify(self, x, noise_level=150):
         x = (x - 0.5) * 2
-        x = torch.sqrt(self.alpha_bar[self.T - noise_level - 1]) * x + \
-            torch.randn_like(x) * torch.sqrt(1 - self.alpha_bar[self.T - noise_level - 1])
+        x = torch.sqrt(self.alpha_bar[noise_level - 1]) * x + \
+            torch.randn_like(x, requires_grad=False) * torch.sqrt(1 - self.alpha_bar[noise_level - 1])
         N = x.shape[0]
         x = x.view(N, -1)
-        ts = torch.tensor([1 - noise_level * 1e-3, 1 - 1e-4], device=self.device)
+        # ts = torch.tensor([1 - noise_level * 1e-3, 1 - 1e-4], device=self.device)
+        ts = torch.linspace(1 - noise_level * 1e-3, 1 - 1e-4, 2)
+        # standard = RevVPSDE(self.unet).cuda().requires_grad_(False).eval()
+        # standard.to(self.device)
         x = torchsde.sdeint_adjoint(self, x, ts, method='euler')
+        x = x.view(ts.shape[0], N, 3, 256, 256)
+        # print(x.shape)
         x = x[-1]
         x = x.view(N, 3, 256, 256)
         return self.convert(x)
@@ -111,8 +127,8 @@ class DiffusionOde(DiffusionSde):
         drift = forward_drift - 0.5 * diffusion ** 2 * score
         return -drift
 
-    def f(self, t: float, x):
-        f = self.reverse_diffusion_forward(x, int(t * self.T), return_type='drift')
+    def f(self, t: torch.tensor, x):
+        f = self.reverse_diffusion_forward(x, round(float(t) * self.T), return_type='drift')
         assert f.shape == x.shape
         # print('f', torch.sum(f))
         return f
