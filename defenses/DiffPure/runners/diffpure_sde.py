@@ -132,7 +132,7 @@ class RevVPSDE(torch.nn.Module):
         """Create the drift function -f(x, 1-t) (by t' = 1 - t)
             sdeint only support a 2D tensor (batch_size, c*h*w)
         """
-        t = t.expand(x.shape[0])  # (batch_size, )
+        t = t.expand(x.shape[0]).cuda()  # (batch_size, )
         drift = self.rvpsde_fn(1 - t, x, return_type='drift')
         assert drift.shape == x.shape
         return -drift
@@ -141,7 +141,7 @@ class RevVPSDE(torch.nn.Module):
         """Create the diffusion function g(1-t) (by t' = 1 - t)
             sdeint only support a 2D tensor (batch_size, c*h*w)
         """
-        t = t.expand(x.shape[0])  # (batch_size, )
+        t = t.expand(x.shape[0]).cuda()  # (batch_size, )
         diffusion = self.rvpsde_fn(1 - t, x, return_type='diffusion')
         assert diffusion.shape == (x.shape[0],)
         return diffusion[:, None].expand(x.shape)
@@ -194,6 +194,7 @@ class RevGuidedDiffusion(torch.nn.Module):
 
         print(f't: {args.t}, rand_t: {args.rand_t}, t_delta: {args.t_delta}')
         print(f'use_bm: {args.use_bm}')
+
     #
     def image_editing_sample(self, img, bs_id=0, tag=None, diffusion_iter_time=None):
         assert isinstance(img, torch.Tensor)
