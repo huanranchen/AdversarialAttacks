@@ -25,10 +25,12 @@ def get_unet():
 
 
 class DiffusionSde(nn.Module):
-    unet, betas = get_unet()
-
-    def __init__(self, unet: nn.Module = unet, beta=betas, T=1000):
+    def __init__(self, unet: nn.Module = None, beta=None, T=1000):
         super(DiffusionSde, self).__init__()
+        if unet is None:
+            unet, beta = get_unet()
+        if beta is None:
+            beta = torch.linspace(0.1 / 1000, 20 / 1000, 1000, device=torch.device('cuda'))
         self.device = torch.device('cuda')
         self.unet = unet
         alpha = (1 - beta)
@@ -82,9 +84,9 @@ class DiffusionSde(nn.Module):
     def sample(self):
         import torchsde
         x = torch.randn((1, 3, 256, 256), device=self.device).view((1, 3 * 256 * 256))
-        ts = torch.tensor([0., 1.-1e-4], device=self.device)
-        standard = RevVPSDE(self.unet).cuda().requires_grad_(False).eval()
-        standard.to(self.device)
+        ts = torch.tensor([0., 1. - 1e-4], device=self.device)
+        # standard = RevVPSDE(self.unet).cuda().requires_grad_(False).eval()
+        # standard.to(self.device)
         x = torchsde.sdeint(self, x, ts, method='euler')
         x = x[-1]  # N, 3, 256, 256
         x = x.reshape(1, 3, 256, 256)
@@ -171,10 +173,13 @@ def ddim(unet, device, alpha_bar, stride=50):
 
 
 class DiffusionPureImageNet(nn.Module):
-    def __init__(self):
+    def __init__(self, mode='sde'):
         super(DiffusionPureImageNet, self).__init__()
         self.device = torch.device('cuda')
-        self.diffusion = DiffusionSde()
+        if mode == 'sde':
+            self.diffusion = DiffusionSde()
+        elif mode == 'ode':
+            self.diffusion = DiffusionOde()
         self.model = resnet50(pretrained=True)
         self.eval().requires_grad_(False)
         self.to(self.device)
