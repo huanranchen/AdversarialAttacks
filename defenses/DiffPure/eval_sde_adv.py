@@ -245,7 +245,7 @@ def robustness_eval(args, config):
     # logger.close()
 
 
-def parse_args_and_config():
+def parse_args_and_config_imagenet():
     """
     CUDA_VISIBLE_DEVICES=0,1,2,3 python eval_sde_adv.py --exp ./exp_results \
           -i imagenet-robust_adv-$t-eps$adv_eps-4x4-bm0-t0-end1e-5-cont-eot20 \
@@ -327,21 +327,82 @@ def parse_args_and_config():
     return args, new_config
 
 
+def parse_args_and_config_cifar():
+    """
+          -i cifar10-robust_adv-$t-eps$adv_eps-64x1-bm0-t0-end1e-5-cont-eot20 \
+          --num_sub 64 \
+    """
+    parser = argparse.ArgumentParser(description=globals()['__doc__'])
+    # diffusion models
+    parser.add_argument('--config', type=str, default='cifar10.yml', help='Path to the config file')
+    parser.add_argument('--data_seed', type=int, default=0, help='Random seed')
+    parser.add_argument('--seed', type=int, default=1234, help='Random seed')
+    parser.add_argument('--exp', type=str, default='exp', help='Path for saving running related data.')
+    parser.add_argument('--verbose', type=str, default='info', help='Verbose level: info | debug | warning | critical')
+    parser.add_argument('-i', '--image_folder', type=str, default='images', help="The folder name of samples")
+    parser.add_argument('--ni', action='store_true', help="No interaction. Suitable for Slurm Job launcher")
+    parser.add_argument('--sample_step', type=int, default=1, help='Total sampling steps')
+    parser.add_argument('--t', type=int, default=100, help='Sampling noise scale')
+    parser.add_argument('--t_delta', type=int, default=15, help='Perturbation range of sampling noise scale')
+    parser.add_argument('--rand_t', type=str2bool, default=False, help='Decide if randomize sampling noise scale')
+    parser.add_argument('--diffusion_type', type=str, default='sde', help='[ddpm, sde]')
+    parser.add_argument('--score_type', type=str, default='score_sde', help='[guided_diffusion, score_sde]')
+    parser.add_argument('--eot_iter', type=int, default=20, help='only for rand version of autoattack')
+    parser.add_argument('--use_bm', action='store_true', help='whether to use brownian motion')
 
-class DiffusionPureImageNet(nn.Module):
-    def __init__(self):
-        super(DiffusionPureImageNet, self).__init__()
-        args, config = parse_args_and_config()
-        # os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
-        model = robustness_eval(args, config)
-        self.model = model.runner
-        self.model.eval()
-        self.model.requires_grad_(False)
-        del model
+    # LDSDE
+    parser.add_argument('--sigma2', type=float, default=1e-3, help='LDSDE sigma2')
+    parser.add_argument('--lambda_ld', type=float, default=1e-2, help='lambda_ld')
+    parser.add_argument('--eta', type=float, default=5., help='LDSDE eta')
+    parser.add_argument('--step_size', type=float, default=1e-2, help='step size for ODE Euler method')
 
-    def forward(self, x, *args, **kwargs):
-        x = (x - 0.5) * 2
-        x = self.model(x, *args, **kwargs)
-        x = (x + 1) * 0.5
-        return x
+    # adv
+    parser.add_argument('--domain', type=str, default='cifar10', help='which domain: celebahq, cat, car, imagenet')
+    parser.add_argument('--classifier_name', type=str, default='cifar10-wideresnet-28-10',
+                        help='which classifier to use')
+    parser.add_argument('--partition', type=str, default='val')
+    parser.add_argument('--adv_batch_size', type=int, default=4)
+    parser.add_argument('--attack_type', type=str, default='square')
+    parser.add_argument('--lp_norm', type=str, default='Linf', choices=['Linf', 'L2'])
+    parser.add_argument('--attack_version', type=str, default='rand')
 
+    parser.add_argument('--num_sub', type=int, default=16, help='imagenet subset')
+    parser.add_argument('--adv_eps', type=float, default=0.0157)
+    # parser.add_argument('--gpu_ids', type=str, default='0')
+
+    args = parser.parse_args()
+
+    # parse config file
+    with open(os.path.join('./defenses/DiffPure/configs', args.config), 'r') as f:
+        config = yaml.safe_load(f)
+    new_config = dict2namespace(config)
+
+    level = getattr(logging, args.verbose.upper(), None)
+    if not isinstance(level, int):
+        raise ValueError('level {} not supported'.format(args.verbose))
+
+    handler1 = logging.StreamHandler()
+    formatter = logging.Formatter('%(levelname)s - %(filename)s - %(asctime)s - %(message)s')
+    handler1.setFormatter(formatter)
+    logger = logging.getLogger()
+    logger.addHandler(handler1)
+    logger.setLevel(level)
+
+    args.image_folder = os.path.join(args.exp, args.image_folder)
+    os.makedirs(args.image_folder, exist_ok=True)
+
+    # add device
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    logging.info("Using device: {}".format(device))
+    new_config.device = device
+    #
+    # # set random seed
+    # torch.manual_seed(args.seed)
+    # random.seed(args.seed)
+    # np.random.seed(args.seed)
+    # if torch.cuda.is_available():
+    #     torch.cuda.manual_seed_all(args.seed)
+
+    torch.backends.cudnn.benchmark = True
+
+    return args, new_config

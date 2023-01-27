@@ -6,3 +6,4 @@ from torchvision.models import alexnet, convnext_tiny, densenet121, efficientnet
 from timm.models import adv_inception_v3
 from timm.models.inception_resnet_v2 import ens_adv_inception_resnet_v2
 from .RobustBench import *
+from .SmallResolutionModel import WideResNet_70_16, WideResNet_70_16_dropout

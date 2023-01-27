@@ -6,3 +6,4 @@ from .ShuffleNetv1 import *
 from .ShuffleNetv2 import *
 from .vgg import *
 from .wrn import *
+from .cifar10_resnet import WideResNet_70_16, WideResNet_70_16_dropout
