@@ -9,3 +9,7 @@ def cosine_similarity(x: torch.tensor, y: torch.tensor or None = None) -> float:
     x, y = x / torch.norm(x, dim=1).view(-1, 1), y / torch.norm(y, dim=1).view(-1, 1)
     gram = x @ y.permute(1, 0)  # N1, N2
     return torch.mean(gram).item()
+
+
+def list_mean(x: list) -> float:
+    return sum(x) / len(x)

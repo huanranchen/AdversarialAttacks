@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from typing import List, Callable, Tuple
 from tqdm import tqdm
 from attacks import AdversarialInputAttacker
-from .utils import cosine_similarity
+from .utils import cosine_similarity, list_mean
 from copy import deepcopy
 from torch import multiprocessing
 
@@ -40,7 +40,7 @@ def test_transfer_attack_acc(attacker: Callable, loader: DataLoader,
     # print
     for i, model in enumerate(target_models):
         print('-' * 100)
-        print(model.__class__,  model.model.__class__, transfer_accs[i])
+        print(model.__class__, model.model.__class__, transfer_accs[i])
         print('-' * 100)
     return transfer_accs
 
@@ -50,12 +50,12 @@ def test_transfer_attack_acc_and_cosine_similarity(attacker: AdversarialInputAtt
                                                    target_models: List[nn.Module],
                                                    device=torch.device(
                                                        'cuda' if torch.cuda.is_available() else 'cpu')
-                                                   ) -> Tuple[List[float], float]:
+                                                   ) -> Tuple[List[float], float, float, float]:
     criterion = nn.CrossEntropyLoss()
     train_models: List[nn.Module] = attacker.models
     transfer_accs = [0] * len(target_models)
     denominator = 0
-    cosine_similarities = []
+    train_train_cosine_similarities, train_test_cosine_similarities, test_test_cosine_similarities = [], [], []
     for x, y in tqdm(loader):
         x = x.to(device)
         y = y.to(device)
@@ -81,19 +81,25 @@ def test_transfer_attack_acc_and_cosine_similarity(attacker: AdversarialInputAtt
             x.grad = None
         x.requires_grad = False
         train_grads, test_grads = torch.stack(train_grads), torch.stack(test_grads)
-        cosine_similarities.append(cosine_similarity(train_grads, test_grads))
+        train_train_cosine_similarities.append(cosine_similarity(train_grads, train_grads))
+        train_test_cosine_similarities.append(cosine_similarity(train_grads, test_grads))
+        test_test_cosine_similarities.append(cosine_similarity(test_grads, test_grads))
 
     transfer_accs = [1 - i / denominator for i in transfer_accs]
     # print
     for i, model in enumerate(target_models):
         print('-' * 100)
-        print(model.__class__,  transfer_accs[i])
+        print(model.__class__, transfer_accs[i])
         print('-' * 100)
-    cosine_similarities = sum(cosine_similarities) / len(cosine_similarities)
+    train_train_cosine_similarities = list_mean(train_train_cosine_similarities)
+    train_test_cosine_similarities = list_mean(train_test_cosine_similarities)
+    test_test_cosine_similarities = list_mean(test_test_cosine_similarities)
     print('-' * 100)
-    print('the cosine similarity is ', cosine_similarities)
+    print('train_train_cosine_similarities', train_train_cosine_similarities)
+    print('train_test_cosine_similarities', train_test_cosine_similarities)
+    print('test_test_cosine_similarities', test_test_cosine_similarities)
     print('-' * 100)
-    return transfer_accs, cosine_similarities
+    return transfer_accs, train_train_cosine_similarities, train_test_cosine_similarities, test_test_cosine_similarities
 
 
 def test_autoattack_acc(model: nn.Module, loader: DataLoader):
