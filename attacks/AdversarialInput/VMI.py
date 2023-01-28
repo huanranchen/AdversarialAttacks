@@ -215,7 +215,7 @@ class VMI_Inner_CommonWeakness(AdversarialInputAttacker):
         del self.original
         return patch
 
-    def calculate_v(self, x: torch.tensor, y: torch.tensor, model: nn.Module, N=8, beta=0.3):
+    def calculate_v(self, x: torch.tensor, y: torch.tensor, model: nn.Module, N=8, beta=1.5):
         B, C, H, D = x.shape
         x = x.reshape(1, B, C, H, D)
         x = x.repeat(N, 1, 1, 1, 1)
