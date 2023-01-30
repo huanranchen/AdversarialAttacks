@@ -1,1 +1,0 @@
-Code in this directory is adapted from the [`mister_ed`](https://github.com/revbucket/mister_ed) library.
