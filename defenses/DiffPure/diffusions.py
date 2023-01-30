@@ -2,7 +2,7 @@ import torch
 import torchsde
 from .eval_sde_adv import parse_args_and_config_imagenet, robustness_eval, parse_args_and_config_cifar
 from torch import nn
-from models import resnet50
+from models import resnet50, WideResNet_70_16_dropout
 from torchvision import transforms
 from .runners.diffpure_sde import RevVPSDE, restore_checkpoint
 from .score_sde.models import utils as mutils
@@ -58,14 +58,18 @@ class DiffusionSde(nn.Module):
         self.alpha_bar = alpha.cumprod(dim=0).to(self.device)
         self.beta = beta * T
         self.T = T
+        self.dt = dt
+        self.img_shape = img_shape
+        self.state_size = img_shape[0] * img_shape[1] * img_shape[2]
+        self.init()
+
+    def init(self):
         self.eval().to(self.device).requires_grad_(False)
         self.noise_type = "diagonal"
         self.sde_type = "ito"
         self.to_img = transforms.ToPILImage()
         self.i = 0
-        self.dt = dt
-        self.img_shape = img_shape
-        self.state_size = img_shape[0] * img_shape[1] * img_shape[2]
+        print(f'dt is {self.dt}')
 
     def convert(self, x):
         x = (x + 1) * 0.5
@@ -242,12 +246,12 @@ class DDIM(nn.Module):
         return self.purify(*args, **kwargs)
 
 
-class DiffusionPureImageNet(nn.Module):
+class DiffusionPure(nn.Module):
     def __init__(self, mode='sde',
                  pre_transforms=nn.Identity(),
                  post_transforms=nn.Identity(),
                  *args, **kwargs):
-        super(DiffusionPureImageNet, self).__init__()
+        super(DiffusionPure, self).__init__()
         self.device = torch.device('cuda')
         if mode == 'sde':
             self.diffusion = DiffusionSde(*args, **kwargs)
@@ -255,7 +259,7 @@ class DiffusionPureImageNet(nn.Module):
             self.diffusion = DiffusionOde(*args, **kwargs)
         elif mode == 'ddim':
             self.diffusion = DDIM(*args, **kwargs)
-        self.model = resnet50(pretrained=True)
+        self.model = WideResNet_70_16_dropout()
         self.eval().requires_grad_(False)
         self.to(self.device)
         self.pre_transforms = pre_transforms
@@ -263,7 +267,24 @@ class DiffusionPureImageNet(nn.Module):
 
     def forward(self, x, *args, **kwargs):
         x = self.pre_transforms(x)
-        x = self.diffusion(x)
+        x = self.diffusion(x, *args, **kwargs)
+        x = self.post_transforms(x)
+        x = self.model(x)
+        return x
+
+
+class SerialDiffusionPure(DiffusionPure):
+    def __init__(self, *args, **kwargs):
+        self.t = kwargs['diffusion_number']
+        del kwargs['diffusion_number']
+        kwargs['dt'] = 1e-3
+        super(SerialDiffusionPure, self).__init__(*args, **kwargs)
+
+    def forward(self, x, *args, **kwargs):
+        x = self.pre_transforms(x)
+        with torch.no_grad():
+            for _ in range(self.t):
+                x = self.diffusion(x, *args, **kwargs)
         x = self.post_transforms(x)
         x = self.model(x)
         return x

@@ -195,5 +195,12 @@ def WideResNet_70_16():
 
 
 def WideResNet_70_16_dropout():
-    return WideResNet(depth=70, widen_factor=16, dropRate=0.3)
+    model = WideResNet(depth=70, widen_factor=16, dropRate=0.3)
+    state = torch.load('./resources/checkpoints/models/WideResNet_70_16_dropout.pt')
+    r = {}
+    for k, v in list(state.items()):
+        k = k.split('module.', 1)[1]
+        r[k] = v
+    model.load_state_dict(r)
+    return model
 # ---------------------------- WideResNet ----------------------------

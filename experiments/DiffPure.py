@@ -6,7 +6,7 @@ import torch
 from utils import Landscape4Input
 from torch.nn import functional as F
 from matplotlib import pyplot as plt
-from defenses import DiffusionPureImageNet
+from defenses import DiffusionPure
 from torchvision import transforms
 from PIL import Image
 from tester import test_transfer_attack_acc, test_transfer_attack_acc_distributed
@@ -17,7 +17,7 @@ to_tensor = transforms.ToTensor()
 classifier = BaseNormModel(resnet50(pretrained=True)).cuda()
 classifier.eval()
 classifier.requires_grad_(False)
-model = DiffusionPureImageNet()
+model = DiffusionPure()
 diffusion = model.cuda()
 diffusion.eval()
 diffusion.requires_grad_(False)

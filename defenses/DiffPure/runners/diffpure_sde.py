@@ -41,10 +41,10 @@ def _extract_into_tensor(arr_or_func, timesteps, broadcast_shape):
 
 def restore_checkpoint(ckpt_dir, state, device):
     loaded_state = torch.load(ckpt_dir, map_location=device)
-    state['optimizer'].load_state_dict(loaded_state['optimizer'])
-    state['model'].load_state_dict(loaded_state['model'], strict=False)
-    state['ema'].load_state_dict(loaded_state['ema'])
-    state['step'] = loaded_state['step']
+    # state['optimizer'].load_state_dict(loaded_state['optimizer'])
+    state['model'].load_state_dict(loaded_state['ema'], strict=False)
+    # state['ema'].load_state_dict(loaded_state['ema'])
+    # state['step'] = loaded_state['step']
 
 
 class RevVPSDE(torch.nn.Module):
@@ -180,7 +180,7 @@ class RevGuidedDiffusion(torch.nn.Module):
             ema = ExponentialMovingAverage(model.parameters(), decay=config.model.ema_rate)
             state = dict(step=0, optimizer=optimizer, model=model, ema=ema)
             restore_checkpoint(f'{model_dir}/checkpoint_8.pth', state, device)
-            ema.copy_to(model.parameters())
+            # ema.copy_to(model.parameters())
 
         else:
             raise NotImplementedError(f'Unknown dataset {config.data.dataset}!')
