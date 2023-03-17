@@ -3,10 +3,6 @@ from torch.optim import Optimizer
 
 
 class PGD(Optimizer):
-    '''
-    P呢？
-    '''
-
     def __init__(self, params, lr=5e-3, maximum=True, epsilon=16 / 255):
         dampening = 0
         weight_decay = 0

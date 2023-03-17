@@ -30,5 +30,4 @@ def default_lr_scheduler(optimizer):
                     print(f'now lr = {now_lr}')
 
             self.last_loss = loss
-
     return ALRS(optimizer)

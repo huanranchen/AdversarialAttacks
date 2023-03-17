@@ -7,12 +7,11 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 modes = ['3D', 'Contour', 'HeatMap', '2D']
-alpha = 0.5  # 不透明度
+alpha = 0.5
 
 
 class Landscape4Input():
     '''
-    这个类负责画图，并且只负责画一张图
     '''
 
     def __init__(self, model,
@@ -92,7 +91,6 @@ class Landscape4Input():
 
     def _draw3D(self, mesh_x, mesh_y, mesh_z, axes=None):
         '''
-        现在这个也能画2D了。。。
         '''
         if self.mode == '3D':
             axes.plot_surface(mesh_x, mesh_y, mesh_z, cmap='rainbow')

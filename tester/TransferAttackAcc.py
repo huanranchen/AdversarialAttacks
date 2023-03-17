@@ -15,20 +15,10 @@ def test_transfer_attack_acc(attacker: Callable, loader: DataLoader,
                              device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')) -> List[float]:
     transfer_accs = [0] * len(target_models)
     denominator = 0
-    # count = 0
-    # to_img = transforms.ToPILImage()
     for x, y in tqdm(loader):
         x = x.to(device)
         y = y.to(device)
-        # ori_x = x.clone()
         x = attacker(x, y)
-        # temp = to_img(x[0])
-        # temp.save(f'./what/mi/4/adv_{count}.png')
-        # temp = to_img(ori_x[0])
-        # temp.save(f'./what/mi/4/ori_{count}.png')
-        # temp = to_img(x[0]-ori_x[0])
-        # temp.save(f'./what/mi/4/perturb_{count}.png')
-        # count += 1
         with torch.no_grad():
             denominator += x.shape[0]
             for i, model in enumerate(target_models):

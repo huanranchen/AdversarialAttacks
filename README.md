@@ -1,7 +1,7 @@
 # Adversarial Attacks
 Official code implement of paper **Boosting Transferability via Attacking Common Weakness**
 
-[**Paper**](https://arxiv.org/abs/2211.09773)
+[**Paper**](https://arxiv.org/abs/2303.09105)
 | Huanran Chen, Yichi Zhang, Yinpeng Dong, Jun Zhu
 
 ---
@@ -15,10 +15,8 @@ pip install requirements.txt
 
 
 ### Data
-Cifar10 will be downloaded automatically
-
-For PACS dataset, please refer to ./data/PACS.py for install
-
+Cifar10 will be downloaded automatically    
+For PACS dataset, please refer to ./data/PACS.py for install    
 For NIPS17 dataset, you can run \
 ```bash
 kaggle datasets download -d google-brain/nips-2017-adversarial-learning-development-set
@@ -48,7 +46,7 @@ optimizer: scheduler and optimizer
 
 tester: some functions to test accuracy and attack success rate
 
-utils: Utilities. Like draw landscape, get time, etc.
+utils: Utilities. Like draw landscape, get time, etc.  
 
 ---
 
@@ -86,6 +84,23 @@ test_transfer_attack_acc(attacker,
                           ]
                          )
 ```
+
+### HRNet
+HRNet is a function that aims to reduce memory cost when crafting adversarial examples.
+
+**We haven't implemented the convolution of HRNet. Up to now, HRNet can only help to reduce about 30% of memory cost**
+
+#### Usage
+```python
+from models import resnet18
+from utils import change
+
+model = resnet18()
+model = change(model)
+```
+
+
+
 
 
 ### For More Example Codes

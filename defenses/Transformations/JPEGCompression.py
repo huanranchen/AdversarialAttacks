@@ -1,7 +1,7 @@
 import torch
 from torchvision import transforms
 from PIL import Image
-from io import BytesIO  # BytesIO实现了在内存中读写bytes
+from io import BytesIO
 
 _to_pil_image = transforms.ToPILImage()
 _to_tensor = transforms.ToTensor()
