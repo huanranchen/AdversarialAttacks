@@ -1,5 +1,5 @@
 # Adversarial Attacks
-Official code implement of paper **Boosting Transferability via Attacking Common Weakness**
+Official code implement of paper **Rethinking Model Ensemble in Transfer-based Adversarial Attacks**
 
 [**Paper**](https://arxiv.org/abs/2303.09105)
 | Huanran Chen, Yichi Zhang, Yinpeng Dong, Jun Zhu
@@ -8,7 +8,7 @@ Official code implement of paper **Boosting Transferability via Attacking Common
 
 ## Install
 ### Environment
-run 
+Please create a new conda environment and run:
 ```bash
 pip install requirements.txt
 ```
@@ -30,27 +30,21 @@ We also encapsulate some models and defenses in *"./models"* and *"./defenses"*.
 
 ---
 
-## Code Framework
+## Usage
 
-attacks: Some attack algorithms. Including VMI, VMI-CW, CW, SAM, etc.
+### Code Framework
 
-data: loader of CIFAR, NIPS17, PACS
+> attacks: Some attack algorithms. Including VMI, VMI-CW, CW, SAM, etc.
+> data: loader of CIFAR, NIPS17, PACS    
+> defenses: Some defenses algorithm    
+> experiments: Example codes    
+> models: Some pretrained models   
+> optimizer: scheduler and optimizer   
+> tester: some functions to test accuracy and attack success rate   
+> utils: Utilities. Like draw landscape, get time, HRNet, etc.     
 
-defenses: Some defenses algorithm
 
-experiments: Example codes
-
-models: Some pretrained models
-
-optimizer: scheduler and optimizer
-
-tester: some functions to test accuracy and attack success rate
-
-utils: Utilities. Like draw landscape, get time, etc.  
-
----
-
-## Basic functions
+### Basic functions
 
 ```
 tester.test_transfer_attack_acc(attacker:AdversarialInputBase, loader:DataLoader, target_models: List[nn.Module]) \
@@ -65,7 +59,8 @@ attacker = xxxAttacker(train_models: List[nn.Module])
 ```
 You can initialize attacker like this.
 
-### example
+### Examples
+Here is an example of testing attack success rate on NIPS17 loader.
 ```python
 from models import resnet18, Wong2020Fast, Engstrom2019Robustness, BaseNormModel, Identity
 from attacks import MI_CommonWeakness
@@ -85,6 +80,10 @@ test_transfer_attack_acc(attacker,
                          )
 ```
 
+
+For more example codes, please visit *'./experiments'* folder. There are some example codes using our framework to attack and draw landscapes. I believe you can quickly get familiar with our framework via these example codes.
+
+
 ### HRNet
 HRNet is a function that aims to reduce memory cost when crafting adversarial examples.
 
@@ -100,8 +99,19 @@ model = change(model)
 ```
 
 
+---
 
+## Citation
+Please cite us:
+```
+@article{chen2023rethinking,
+  title={Rethinking Model Ensemble in Transfer-based Adversarial Attacks},
+  author={Chen, Huanran and Zhang, Yichi and Dong, Yinpeng and Zhu, Jun},
+  journal={arXiv preprint arXiv:2303.09105},
+  year={2023}
+}
+```
 
-
-### For More Example Codes
-Please visit *'./experiments'* folder. There are some example codes using our framework to attack and draw landscapes. I believe you can quickly get familiar with our framework via these example codes.
+If you have any question, you can contact us by:    
+github issue     
+email: huanran_chen@outlook.com, huanranchen@bit.edu.cn    
