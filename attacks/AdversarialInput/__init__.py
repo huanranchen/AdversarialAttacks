@@ -8,3 +8,4 @@ from .TI import *
 from .SGD import *
 from .DiffusionAttacker import DiffusionAttacker, DiffusionPatchAttacker
 from .DI import DI_MI_FGSM
+from .NAttack import NAttack
