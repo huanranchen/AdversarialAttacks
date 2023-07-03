@@ -2,7 +2,7 @@
 (c) YANG, Wei
 
 
-adding hyperparameter norm_layer: Huanran Chen
+adding hyperparameter norm_layer
 """
 
 import math

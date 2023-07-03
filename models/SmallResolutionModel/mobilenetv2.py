@@ -2,7 +2,7 @@
 MobileNetV2 implementation used in
 <Knowledge Distillation via Route Constrained Optimization>
 
-adding hyperparameter norm_layer: Huanran Chen
+adding hyperparameter norm_layer
 """
 
 import math

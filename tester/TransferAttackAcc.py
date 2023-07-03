@@ -23,14 +23,18 @@ def test_transfer_attack_acc(attacker: Callable, loader: DataLoader,
             denominator += x.shape[0]
             for i, model in enumerate(target_models):
                 pre = model(x)  # N, D
-                pre = torch.max(pre, dim=1)[1]  # N
+                if pre.shape != y.shape:
+                    _, pre = torch.max(pre, dim=1)
                 transfer_accs[i] += torch.sum(pre == y).item()
 
     transfer_accs = [1 - i / denominator for i in transfer_accs]
     # print
     for i, model in enumerate(target_models):
         print('-' * 100)
-        print(model.__class__, model.model.__class__, transfer_accs[i])
+        if hasattr(model, 'model'):
+            print(model.__class__, model.model.__class__, transfer_accs[i])
+        else:
+            print(model.__class__, transfer_accs[i])
         print('-' * 100)
     return transfer_accs
 
@@ -91,17 +95,6 @@ def test_transfer_attack_acc_and_cosine_similarity(attacker: AdversarialInputAtt
     print('-' * 100)
     return transfer_accs, train_train_cosine_similarities, train_test_cosine_similarities, test_test_cosine_similarities
 
-
-def test_autoattack_acc(model: nn.Module, loader: DataLoader):
-    from autoattack import AutoAttack
-    adversary = AutoAttack(model, eps=8 / 255)
-    xs, ys = [], []
-    for x, y in tqdm(loader):
-        xs.append(x)
-        ys.append(y)
-    x = torch.concat(xs, dim=0).cuda()
-    y = torch.concat(ys, dim=0).cuda()
-    adversary.run_standard_evaluation(x, y, bs=8)
 
 
 def test_transfer_attack_acc_with_batch(get_attacker: Callable,

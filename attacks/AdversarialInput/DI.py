@@ -15,24 +15,23 @@ class DI_MI_FGSM(AdversarialInputAttacker):
 
     def __init__(self,
                  model: List[nn.Module],
-                 epsilon: float = 16 / 255,
                  total_step: int = 10,
                  random_start: bool = False,
                  step_size: float = 16 / 255 / 10,
                  criterion: Callable = nn.CrossEntropyLoss(),
                  targeted_attack=False,
                  mu: float = 1,
+                 *args, **kwargs
                  ):
-        super(DI_MI_FGSM, self).__init__(model)
+        super(DI_MI_FGSM, self).__init__(model, *args, **kwargs)
         self.random_start = random_start
-        self.epsilon = epsilon
         self.total_step = total_step
         self.step_size = step_size
         self.criterion = criterion
         self.targerted_attack = targeted_attack
         self.mu = mu
         self.aug_policy = transforms.Compose([
-            transforms.RandomCrop((224, 224), padding=224-int(224*0.9)),
+            transforms.RandomCrop((224, 224), padding=224 - int(224 * 0.9)),
         ])
         self.init()
 

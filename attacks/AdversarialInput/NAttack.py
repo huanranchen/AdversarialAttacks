@@ -9,17 +9,15 @@ __all__ = ['NAttack']
 
 class NAttack(AdversarialInputAttacker):
     def __init__(self, model: List[nn.Module],
-                 epsilon: float = 16 / 255,
                  total_step: int = 600,
                  step_size: float = 0.008,
                  batch_size=300,
                  sigma=0.1,
                  ):
-        self.epsilon = epsilon
         self.total_step = total_step
         self.step_size = step_size
         self.batch_size = batch_size
-        super(NAttack, self).__init__(model)
+        super(NAttack, self).__init__(model, *args, **kwargs)
         self.sigma = sigma
 
     def perturb(self, x):

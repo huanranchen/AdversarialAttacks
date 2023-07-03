@@ -1,4 +1,5 @@
 from .Transformations import BitDepthReduction, Randomization, JPEGCompression
 from .NeuralRepresentationPurifier import NeuralRepresentationPurifier
 from .RandomizedSmoothing import randomized_smoothing_resnet50
+from defenses.PurificationDefenses.DiffPure import *
 from .AdvTrain import AdversarialTraining

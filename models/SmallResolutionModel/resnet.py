@@ -9,7 +9,7 @@ https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 
 
 adding hyperparameter norm_layers
-Huanran Chen
+
 """
 import math
 

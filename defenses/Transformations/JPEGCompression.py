@@ -1,12 +1,13 @@
 import torch
 from torchvision import transforms
 from PIL import Image
-from io import BytesIO
+from io import BytesIO  # BytesIO write bytes in memory
 
 _to_pil_image = transforms.ToPILImage()
 _to_tensor = transforms.ToTensor()
 
 __all__ = ['JPEGCompression']
+
 
 class Jpeg_compression(object):
     '''
@@ -21,7 +22,7 @@ class Jpeg_compression(object):
         for img in x:
             img = _to_pil_image(img.detach().clone().cpu())
             virtualpath = BytesIO()
-            img.save(virtualpath, 'JPEG', quality=self.quality)  # 压缩成jpeg
+            img.save(virtualpath, 'JPEG', quality=self.quality)
             lst_img.append(_to_tensor(Image.open(virtualpath)))
         return x.new_tensor(torch.stack(lst_img))
 
@@ -42,6 +43,5 @@ class JPEGCompression(torch.nn.Module):
 
     def forward(self, x):
         x = self.jpegcompression(x)
-        x = self.transforms(x)
         x = x.to(self.device)
         return self.model(x)

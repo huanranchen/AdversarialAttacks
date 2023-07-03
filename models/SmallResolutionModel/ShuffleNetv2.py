@@ -1,8 +1,7 @@
 """ShuffleNetV2 in PyTorch.
 See the paper "ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design" for more details.
 
-
-adding hyperparameter norm_layer: Huanran Chen
+adding hyperparameter norm_layer
 """
 import torch
 import torch.nn as nn

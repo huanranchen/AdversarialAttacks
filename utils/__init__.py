@@ -1,3 +1,3 @@
 from .ImageHandling import *
 from .plot import *
-from .HRNet import change
+from .HRNet import *

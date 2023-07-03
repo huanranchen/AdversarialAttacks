@@ -59,15 +59,9 @@ class Randomization(torch.nn.Module):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.i = 0
 
-
     def forward(self, x):
-        # img = transforms.ToPILImage()(x[0])
-        # img.save(f'./what/{self.i}.png')
-        # self.i += 1
         x = self.randomization(x)
-        x = self.transforms(x)
         return self.model(x)
-
 
 # class Randomization(torch.nn.Module):
 #     def __init__(self, model: torch.nn.Module,

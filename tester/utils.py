@@ -1,14 +1,20 @@
 import torch
 
 
-def cosine_similarity(x: torch.tensor, y: torch.tensor or None = None) -> float:
-    if y is None:
-        y = x  # self cosine similarity
-    # x: N1, D     y: N2, D         where N is the number of train_models
-    x, y = x.reshape(x.shape[0], -1), y.reshape(y.shape[0], -1)
-    x, y = x / torch.norm(x, dim=1).view(-1, 1), y / torch.norm(y, dim=1).view(-1, 1)
-    gram = x @ y.permute(1, 0)  # N1, N2
-    return torch.mean(gram).item()
+def cosine_similarity(x: list):
+    '''
+    input a list of tensor with same shape. return the mean cosine_similarity
+    '''
+    x = torch.stack(x)
+    N = x.shape[0]
+    x = x.reshape(N, -1)
+
+    norm = torch.norm(x, p=2, dim=1)
+    x /= norm.reshape(-1, 1)  # N, D
+    similarity = x @ x.T  # N, N
+    mask = torch.triu(torch.ones(N, N, device=x.device), diagonal=0).to(torch.bool)
+    similarity = similarity[mask]
+    return torch.mean(similarity).item()
 
 
 def list_mean(x: list) -> float:

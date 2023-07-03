@@ -1,8 +1,4 @@
 # Adversarial Attacks
-Official code implement of paper **Rethinking Model Ensemble in Transfer-based Adversarial Attacks**
-
-[**Paper**](https://arxiv.org/abs/2303.09105)
-| Huanran Chen, Yichi Zhang, Yinpeng Dong, Jun Zhu
 
 ---
 
@@ -15,9 +11,9 @@ pip install requirements.txt
 
 
 ### Data
-Cifar10 will be downloaded automatically    
-For PACS dataset, please refer to ./data/PACS.py for install    
-For NIPS17 dataset, you can run \
+**CIFAR10** will be downloaded automatically    
+For **PACS** dataset, please refer to ./data/PACS.py for install    
+For **NIPS17** dataset, you can run \
 ```bash
 kaggle datasets download -d google-brain/nips-2017-adversarial-learning-development-set
 ```
@@ -34,7 +30,7 @@ We also encapsulate some models and defenses in *"./models"* and *"./defenses"*.
 
 ### Code Framework
 
-> attacks: Some attack algorithms. Including VMI, VMI-CW, CW, SAM, etc.
+> attacks: Some attack algorithms. Including VMI, VMI-CW, CW, SAM, etc.      
 > data: loader of CIFAR, NIPS17, PACS    
 > defenses: Some defenses algorithm    
 > experiments: Example codes    
@@ -112,6 +108,5 @@ Please cite us:
 }
 ```
 
-If you have any question, you can contact us by:    
-github issue     
-email: huanran_chen@outlook.com, huanranchen@bit.edu.cn    
+If you have any question, you can contact us by:   
+Email: huanran_chen@outlook.com, huanranchen@bit.edu.cn    

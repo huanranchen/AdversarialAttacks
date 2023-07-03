@@ -24,6 +24,7 @@ def replace_node_module(node: fx.Node, modules: Dict[str, Any], new_module: torc
     modules[node.target] = new_module
     setattr(modules[parent_name], name, new_module)
 
+
 @torch.no_grad()
 def change(model: nn.Module) -> fx.GraphModule:
     traced_model = fx.symbolic_trace(model)

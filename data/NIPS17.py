@@ -20,7 +20,7 @@ class NIPS17(Dataset):
         self.images.sort()
         self.images_path = images_path
         self.transforms = transforms.Compose([
-            transforms.Resize((224, 224)),
+            transforms.Resize((256, 256)),
             transforms.ToTensor(),
         ])
 

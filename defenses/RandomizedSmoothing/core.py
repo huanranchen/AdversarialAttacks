@@ -3,7 +3,6 @@ from scipy.stats import norm, binom_test
 import numpy as np
 from math import ceil
 from statsmodels.stats.proportion import proportion_confint
-from models import resnet50
 
 
 class Smooth(object):
@@ -12,7 +11,9 @@ class Smooth(object):
     # to abstain, Smooth returns this int
     ABSTAIN = -1
 
-    def __init__(self, base_classifier: torch.nn.Module, num_classes: int, sigma: float):
+    def __init__(self, base_classifier: torch.nn.Module,
+                 num_classes: int = 10, sigma: float = 0.25, batch_size: int = 1,
+                 verbose=False):
         """
         :param base_classifier: maps from [batch x channel x height x width] to [batch x num_classes]
         :param num_classes:
@@ -21,8 +22,11 @@ class Smooth(object):
         self.base_classifier = base_classifier
         self.num_classes = num_classes
         self.sigma = sigma
+        self.batch_size = batch_size
+        self.verbose = verbose
 
-    def certify(self, x: torch.tensor, n0: int, n: int, alpha: float, batch_size: int) -> (int, float):
+    def certify(self, x: torch.tensor,
+                n0: int = 100, n: int = 1000, alpha: float = 0.001) -> (int, float):
         """ Monte Carlo algorithm for certifying that g's prediction around x is constant within some L2 radius.
         With probability at least 1 - alpha, the class returned by this method will equal g(x), and g's prediction will
         robust within a L2 ball of radius R around x.
@@ -35,6 +39,7 @@ class Smooth(object):
         :return: (predicted class, certified radius)
                  in the case of abstention, the class will be ABSTAIN and the radius 0.
         """
+        batch_size = self.batch_size
         self.base_classifier.eval()
         # draw samples of f(x+ epsilon)
         counts_selection = self._sample_noise(x, n0, batch_size)
@@ -51,7 +56,8 @@ class Smooth(object):
             radius = self.sigma * norm.ppf(pABar)
             return cAHat, radius
 
-    def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int) -> int:
+    def predict(self, x: torch.tensor,
+                n: int = 1000, alpha: float = 0.001, batch_size: int = 1) -> int:
         """ Monte Carlo algorithm for evaluating the prediction of g at x.  With probability at least 1 - alpha, the
         class returned by this method will equal g(x).
 
@@ -90,7 +96,10 @@ class Smooth(object):
 
                 batch = x.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch, device='cuda') * self.sigma
-                predictions = self.base_classifier(batch + noise).argmax(1)
+                logits = self.base_classifier(batch + noise)
+                if self.verbose:
+                    print(logits, torch.max(logits, dim=1)[1])
+                predictions = logits.argmax(1)
                 counts += self._count_arr(predictions.cpu().numpy(), self.num_classes)
             return counts
 
@@ -111,34 +120,3 @@ class Smooth(object):
         :return: a lower bound on the binomial proportion which holds true w.p at least (1 - alpha) over the samples
         """
         return proportion_confint(NA, N, alpha=2 * alpha, method="beta")[0]
-
-
-class RandomizedSmoothing():
-    def __init__(self, sigma="0.50",
-                 pretrained=True,
-                 ):
-        self.device = torch.device('cuda')
-        model = resnet50()
-        if pretrained:
-            r = {}
-            state = torch.load(
-                f'./resources/checkpoints/RS/models/'
-                f'imagenet/resnet50/noise_{sigma}/checkpoint.pth.tar')['state_dict']
-            for x in list(state.items()):
-                if len(x) == 2:
-                    k, v = x
-                    r[k[9:]] = v
-            model.load_state_dict(r)
-        model.eval().to(self.device)
-        self.model = Smooth(model, 1000, float(sigma))
-
-    def __call__(self, x):
-        x = x.squeeze()
-        x = self.model.predict(x, n=100, alpha=0.001, batch_size=10)
-        result = torch.zeros((1, 1000), device=self.device)
-        result[0, x - 1] = 1
-        return result
-
-
-def randomized_smoothing_resnet50(sigma="0.50", pretrained=True):
-    return RandomizedSmoothing(sigma)

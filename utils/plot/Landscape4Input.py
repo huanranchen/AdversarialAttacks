@@ -11,9 +11,6 @@ alpha = 0.5
 
 
 class Landscape4Input():
-    '''
-    '''
-
     def __init__(self, model,
                  input: torch.tensor,
                  mode='3D'):
@@ -90,8 +87,6 @@ class Landscape4Input():
         return result
 
     def _draw3D(self, mesh_x, mesh_y, mesh_z, axes=None):
-        '''
-        '''
         if self.mode == '3D':
             axes.plot_surface(mesh_x, mesh_y, mesh_z, cmap='rainbow')
 

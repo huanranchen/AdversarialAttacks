@@ -16,8 +16,9 @@ def test_acc(model: nn.Module, loader: DataLoader or Iterable,
     for x, y in tqdm(loader):
         x, y = x.to(device), y.to(device)
         pre = model(x)
-        total_loss += criterion(pre, y).item() * y.shape[0]
-        _, pre = torch.max(pre, dim=1)
+        if pre.shape != y.shape:
+            total_loss += criterion(pre, y).item() * y.shape[0]
+            _, pre = torch.max(pre, dim=1)
         total_acc += torch.sum((pre == y)).item()
         denominator += y.shape[0]
 

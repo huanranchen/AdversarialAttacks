@@ -8,7 +8,7 @@ from scipy import stats as st
 
 
 class MI_TI_FGSM(AdversarialInputAttacker):
-    def __init__(self, model: List[nn.Module], epsilon: float = 16 / 255,
+    def __init__(self, model: List[nn.Module],
                  total_step: int = 10, random_start: bool = False,
                  step_size: float = 16 / 255 / 10,
                  criterion: Callable = nn.CrossEntropyLoss(),
@@ -16,13 +16,12 @@ class MI_TI_FGSM(AdversarialInputAttacker):
                  mu: float = 1,
                  ):
         self.random_start = random_start
-        self.epsilon = epsilon
         self.total_step = total_step
         self.step_size = step_size
         self.criterion = criterion
         self.targerted_attack = targeted_attack
         self.mu = mu
-        super(MI_TI_FGSM, self).__init__(model)
+        super(MI_TI_FGSM, self).__init__(model, *args, **kwargs)
         self.conv = self.gkern().to(self.device)
         self.conv.requires_grad_(False)
 

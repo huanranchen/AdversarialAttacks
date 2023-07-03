@@ -25,12 +25,6 @@ class NeuralRepresentationPurifier(torch.nn.Module):
         self.to_img = transforms.ToPILImage()
 
     def forward(self, x):
-        # img = self.to_img(x[0])
-        # img.save(f'./what/{self.i}_adv.png')
         x = self.netG(x)
-        # img = self.to_img(x[0])
-        # img.save(f'./what/{self.i}_denoise.png')
-        # self.i += 1
-        x = self.transforms(x)
         return self.model(x)
 

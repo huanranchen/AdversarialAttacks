@@ -94,7 +94,7 @@ class AdversarialTraining():
             print(f'epoch {epoch}, loss = {train_loss}, acc = {train_acc}')
             torch.save(self.student.state_dict(), f'./student_{self.writer_name}.pth')
             self.writer.add_scalar('loss/train', train_loss, epoch)
-            self.writer.add_scalar('robust_acc/train', train_acc, epoch)
+            self.writer.add_scalar('acc/train', train_acc, epoch)
             self.writer.add_scalar('hyper/lr', self.optimizer.param_groups[0]['lr'], epoch)
 
             if eval_loader is not None:
@@ -103,4 +103,4 @@ class AdversarialTraining():
                     test_attacker = self.attacker
                 result = test_transfer_attack_acc(test_attacker, eval_loader, [self.student])
                 result = 1 - result[0]
-                self.writer.add_scalar('robust_acc/eval', result, epoch)
+                self.writer.add_scalar('acc/eval', result, epoch)

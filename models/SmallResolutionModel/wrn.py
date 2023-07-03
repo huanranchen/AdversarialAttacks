@@ -8,7 +8,7 @@ import torch.nn.functional as F
 Original Author: Wei Yang
 
 
-adding hyperparameter norm_layer: Huanran Chen
+adding hyperparameter norm_layer
 """
 
 __all__ = [

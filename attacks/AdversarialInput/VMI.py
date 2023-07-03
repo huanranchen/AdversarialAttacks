@@ -11,21 +11,20 @@ from scipy import stats as st
 
 class VMI_FGSM(AdversarialInputAttacker):
     def __init__(self, model: List[nn.Module],
-                 epsilon: float = 16 / 255,
                  total_step: int = 10, random_start: bool = False,
                  step_size: float = 16 / 255 / 10,
                  criterion: Callable = nn.CrossEntropyLoss(),
                  targeted_attack=False,
                  mu: float = 1,
+                 *args, **kwargs
                  ):
         self.random_start = random_start
-        self.epsilon = epsilon
         self.total_step = total_step
         self.step_size = step_size
         self.criterion = criterion
         self.targerted_attack = targeted_attack
         self.mu = mu
-        super(VMI_FGSM, self).__init__(model)
+        super(VMI_FGSM, self).__init__(model, *args, **kwargs)
 
     def perturb(self, x):
         x = x + (torch.rand_like(x) - 0.5) * 2 * self.epsilon
@@ -90,7 +89,6 @@ class VMI_FGSM(AdversarialInputAttacker):
 class VMI_Inner_CommonWeakness(AdversarialInputAttacker):
     def __init__(self,
                  model: List[nn.Module],
-                 epsilon: float = 16 / 255,
                  total_step: int = 10,
                  random_start: bool = False,
                  step_size: float = 16 / 255 / 5,
@@ -102,9 +100,9 @@ class VMI_Inner_CommonWeakness(AdversarialInputAttacker):
                  inner_step_size: float = 250,
                  DI=False,
                  TI=False,
+                 *args, **kwargs
                  ):
         self.random_start = random_start
-        self.epsilon = epsilon
         self.total_step = total_step
         self.step_size = step_size
         self.criterion = criterion
@@ -112,7 +110,7 @@ class VMI_Inner_CommonWeakness(AdversarialInputAttacker):
         self.mu = mu
         self.outer_optimizer = outer_optimizer
         self.reverse_step_size = reverse_step_size
-        super(VMI_Inner_CommonWeakness, self).__init__(model)
+        super(VMI_Inner_CommonWeakness, self).__init__(model, *args, **kwargs)
         self.inner_step_size = inner_step_size
         self.DI = DI
         self.TI = TI
@@ -247,7 +245,6 @@ class VMI_Inner_CommonWeakness(AdversarialInputAttacker):
 class VMI_Outer_CommonWeakness(AdversarialInputAttacker):
     def __init__(self,
                  model: List[nn.Module],
-                 epsilon: float = 16 / 255,
                  total_step: int = 10,
                  random_start: bool = False,
                  step_size: float = 16 / 255 / 5,
@@ -259,9 +256,9 @@ class VMI_Outer_CommonWeakness(AdversarialInputAttacker):
                  inner_step_size: float = 250,
                  DI=False,
                  TI=False,
+                 *args, **kwargs
                  ):
         self.random_start = random_start
-        self.epsilon = epsilon
         self.total_step = total_step
         self.step_size = step_size
         self.criterion = criterion
@@ -269,7 +266,7 @@ class VMI_Outer_CommonWeakness(AdversarialInputAttacker):
         self.mu = mu
         self.outer_optimizer = outer_optimizer
         self.reverse_step_size = reverse_step_size
-        super(VMI_Outer_CommonWeakness, self).__init__(model)
+        super(VMI_Outer_CommonWeakness, self).__init__(model, *args, **kwargs)
         self.inner_step_size = inner_step_size
         self.DI = DI
         self.TI = TI
@@ -336,11 +333,13 @@ class VMI_Outer_CommonWeakness(AdversarialInputAttacker):
                 if self.TI:
                     grad = self.ti(grad)
                 if self.targerted_attack:
-                    inner_momentum = self.mu * inner_momentum - grad / torch.norm(grad.reshape(NB, -1), p=2, dim=1).view(
+                    inner_momentum = self.mu * inner_momentum - grad / torch.norm(grad.reshape(NB, -1), p=2,
+                                                                                  dim=1).view(
                         NB, 1, 1, 1)
                     x += self.inner_step_size * inner_momentum
                 else:
-                    inner_momentum = self.mu * inner_momentum + grad / torch.norm(grad.reshape(NB, -1), p=2, dim=1).view(
+                    inner_momentum = self.mu * inner_momentum + grad / torch.norm(grad.reshape(NB, -1), p=2,
+                                                                                  dim=1).view(
                         NB, 1, 1, 1)
                     x += self.inner_step_size * inner_momentum
                 x = clamp(x)
