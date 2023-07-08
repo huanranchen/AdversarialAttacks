@@ -20,7 +20,7 @@ fonttools==4.39.2
 geotorch==0.3.0
 google-auth==2.16.2
 google-auth-oauthlib==0.4.6
-grpcio==1.51.3
+grpcio==1.53.0
 huggingface-hub==0.13.2
 idna==2.10
 Jinja2==3.1.2
